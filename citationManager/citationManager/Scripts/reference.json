@@ -1,0 +1,61 @@
+{
+    "offset": 0, 
+    "data": [
+        {
+            "citedPaper": {
+                "paperId": "567812f1c85cd361fe5ee855277ce63d8865d1a9", 
+                "externalIds": {
+                    "MAG": "3100853254",
+                    "ArXiv": "2011.08204", 
+                    "DOI": "10.1051/0004-6361/202038809", 
+                    "CorpusId": 226975554
+                }, 
+                "title": "The LOFAR Two-meter Sky Survey: Deep Fields Data Release 1", 
+                "year": 2020, 
+                "publicationDate": "2020-10-27", 
+                "authors": [
+                    {
+                        "authorId": "153248339", 
+                        "name": "K. Duncan"
+                    }, 
+                    {
+                        "authorId": "102763655", 
+                        "name": "R. Kondapally"
+                    }, 
+                    {
+                        "authorId": "2110944128", 
+                        "name": "M. J. I. Brown"
+                    }
+                ]
+            }
+        },
+        {
+            "citedPaper": {
+                "paperId": "2b221b7bacfe97ef6d98f1e019280ae43a3e78fc", 
+                "externalIds": {
+                    "MAG": "2888532099", 
+                    "ArXiv": "1801.02634",
+                    "DOI": "10.3847/1538-3881/aabc4f", 
+                    "CorpusId": 119218139
+                }, 
+                "title": "The Astropy Project: Building an Open-science Project and Status of the v2.0 Core Package", 
+                "year": 2018, 
+                "publicationDate": "2018-01-08", 
+                "authors": [
+                    {
+                        "authorId": "103064252", 
+                        "name": "The Astropy Collaboration"
+                    }, 
+                    {
+                        "authorId": "1387480392", 
+                        "name": "A. Price-Whelan"
+                    }, 
+                    {
+                        "authorId": "88708678", 
+                        "name": "B. SipHocz"
+                    }
+                ]
+            }
+        }
+    ]
+}
