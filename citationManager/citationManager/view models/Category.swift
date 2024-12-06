@@ -15,6 +15,7 @@ enum Category: Hashable, CaseIterable, Identifiable {
     case readingList
     case authors
     case keywords
+    case objects
     case list(Collection)
     case tags(Tag)
     
@@ -34,6 +35,8 @@ enum Category: Hashable, CaseIterable, Identifiable {
             "Authors"
         case .keywords:
             "Keywords"
+        case .objects:
+            "Objects"
         case .list(let PaperGroup):
             PaperGroup.id.uuidString
         case .tags(let TagGroup):
@@ -57,6 +60,8 @@ enum Category: Hashable, CaseIterable, Identifiable {
             return "Authors"
         case .keywords:
             return "Keywords"
+        case .objects:
+            return "Objects"
         case .list(let Group):
             return Group.title
         case .tags(let Group):
@@ -81,6 +86,8 @@ enum Category: Hashable, CaseIterable, Identifiable {
             "person.2"
         case .keywords:
             "key.viewfinder"
+        case .objects:
+            "hurricane"
         case .list(_):
             "folder"
         case .tags(_):

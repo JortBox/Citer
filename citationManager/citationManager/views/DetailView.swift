@@ -74,6 +74,26 @@ struct DetailView: View {
                             DisplayModePicker(mode: $mode)
                         }
                     }
+                
+            case .objects:
+                if let object = navigationManager.selectedObject {
+                    let papersToPass = papers
+                        .filter({$0.objects.map({$0.name}).contains(object.name)})
+                        .sorted(by: {$0.title < $1.title})
+                    
+                    Group {
+                        switch mode {
+                        case .list:
+                            PaperListView(papers: papersToPass, category: .all, sortOption: $sortOption, paperViewMode: .large)
+                        case .gallery:
+                            TileView(papers: papersToPass)
+                        }
+                    }
+                    .toolbar {
+                        Spacer()
+                        DisplayModePicker(mode: $mode)
+                    }
+                }
             }
         } else { EmptyPaperView() }
     }

@@ -12,7 +12,7 @@ import SwiftData
 
 @Model
 final class Paper {
-    let id = UUID()
+    var id = UUID()
     var title: String
     var publicationDate: Date
     var dateAdded: Date
@@ -33,6 +33,8 @@ final class Paper {
     @Relationship(deleteRule: .cascade) var authors: [Author]
     @Relationship(deleteRule: .nullify) var bibliography: [Reference]
     @Relationship(deleteRule: .cascade) var keywords: [Keyword]
+    @Relationship(deleteRule: .cascade) var objects: [Object]
+    
     
     init(bibcode: String,
          title: String,
@@ -48,7 +50,8 @@ final class Paper {
          doi: String,
          year: String,
          referenceIds: [String] = [],
-         keywords: [Keyword] = []
+         keywords: [Keyword] = [],
+         objects: [Object] = []
     ) {
         self.title = title
         self.publicationDate = publicationDate
@@ -65,6 +68,7 @@ final class Paper {
         self.year = year
         self.referenceIds = referenceIds
         self.keywords = keywords
+        self.objects = objects
     }
 }
 

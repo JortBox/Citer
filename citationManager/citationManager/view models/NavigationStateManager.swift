@@ -14,6 +14,32 @@ class NavigationStateManager: ObservableObject {
     @Published var selectedCategory: Category? = nil
     @Published var highlightMode: Bool = false
     
+    @Published var selectedPaper: Paper? = nil
+    
+    @Published var selectedAuthor: Author? = nil
+    
+    @Published var selectedKeyword: Keyword? = nil
+    
+    @Published var selectedObject: Object? = nil
+    
+    
+    func goToSettings() {
+        //selectionState = .settings
+    }
+    
+    func setSelectedPapers(to paper: Paper) {
+        //selectionState = .book(book)
+    }
+    
+}
+
+/*
+class NavigationStateManager: ObservableObject {
+    
+    @Published var columnVisibility: NavigationSplitViewVisibility = .all
+    @Published var selectedCategory: Category? = nil
+    @Published var highlightMode: Bool = false
+    
     @Published var selectedPaper: Paper? = nil {
         didSet {
             selectedID = selectedPaper?.bibcode
@@ -45,3 +71,5 @@ class NavigationStateManager: ObservableObject {
     }
     
 }
+*/
+

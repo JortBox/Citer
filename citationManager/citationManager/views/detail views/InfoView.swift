@@ -11,11 +11,14 @@ import SwiftData
 struct InfoView: View {
     var paperId: UUID
     
+    @Environment(\.modelContext) var context
     @Query var papers: [Paper]
+    @Query var tags: [Tag]
     @State private var popoverIsPresented: Bool = false
+    @State private var tagName: String = ""
     
     var body: some View {
-        let paper: Paper = papers.filter({$0.id == paperId})[0]
+        let paper: Paper = papers.first(where: {$0.id == paperId}) ?? papers.first!
         
         List {
             VStack(alignment: .leading) {
@@ -46,47 +49,35 @@ struct InfoView: View {
                 
                 VStack(alignment: .leading) {
                     Label {
+                        Text("Tags:")
                         HStack(alignment: .top) {
-                            Text("Tags:")
-                            //Text(tags.filter({$0.papers.contains(paper)}).map({"#\($0.title)"}).joined(separator: " "))
-                            //    .foregroundStyle(.blue)
-                            
+                            Text(tags.filter({$0.paperId.contains(paper.bibcode)}).map({"#\($0.title)"}).joined(separator: ", "))
+                                .foregroundStyle(.blue)
                         }
                     } icon: { Image(systemName: "tag").foregroundColor(.primary) }
                     
-                    
-                    Menu {
-                        Button("New Tag") {
-                            let newTag = Tag(title: "New Tag")
-                            newTag.papers.append(paper)
-                            //context.insert(newTag)
-                            
-                        }
-                        Divider()
-                        /*
-                        ForEach(tags) { tag in
-                            Button(action: {
-                                if !tag.papers.contains(paper) {
-                                    tag.papers.append(paper)
-                                } else {
-                                    tag.papers.removeAll(where: {$0.bibcode == paper.bibcode})
+                    Button(action: {
+                        self.popoverIsPresented.toggle()
+                    }, label: {
+                        Label("Add Tag", systemImage: "plus.circle")
+                            .foregroundStyle(popoverIsPresented ? .accent : .secondary)
+                    })
+                    .buttonStyle(.accessoryBar)
+                    .popover(isPresented: $popoverIsPresented, arrowEdge: .bottom) {
+                        VStack(alignment: .trailing) {
+                            TextField("New Tag", text: $tagName)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 250)
+                                .padding()
+                                .onSubmit {
+                                    let newTag = Tag(title: tagName)
+                                    newTag.paperId.append(paper.bibcode)
+                                    context.insert(newTag)
+                                    tagName = ""
+                                    popoverIsPresented.toggle()
                                 }
-                            }, label: {
-                                if !tag.papers.contains(paper) {
-                                    Text("#\(tag.title)")
-                                } else {
-                                    Text("✓ #\(tag.title)")
-                                }
-                            })
                         }
-                         */
-                    } label: { Label("Add Tag", systemImage: "number") }
-                        .menuIndicator(.hidden)
-                        .menuStyle(.borderlessButton)
-                        .frame(alignment: .trailing)
-                     
-                        
-                    
+                    }
                 }
                 Divider()
                 
@@ -191,6 +182,34 @@ struct InfoView: View {
                     }
                 } icon: { Image(systemName: "info.bubble.rtl").foregroundColor(.primary) }
                 
+                Divider()
+                
+                Label {
+                    HStack(alignment: .top) {
+                        Text("Objects:")
+                        if !paper.objects.isEmpty {
+                            VStack(alignment: .leading) {
+                                ForEach(paper.objects.sorted(by: {$0.name < $1.name})) { object in
+                                    Text(object.name)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                } icon: { Image(systemName: "hurricane").foregroundColor(.primary) }
+                
+                Divider()
+                
+                Button(
+                    action: {
+                        ReloadInfo(paper: paper)
+                    }, label: {
+                        Label {
+                            Text("Reload")
+                        } icon: { Image(systemName: "arrow.trianglehead.clockwise.rotate.90").foregroundColor(.primary) }
+                    }
+                )
+                
             }
             .textSelection(.enabled)
         }
@@ -203,6 +222,18 @@ struct InfoView: View {
             authorList.append(author.name)
         }
         return authorList
+    }
+    
+    func ReloadInfo(paper: Paper){
+        Task.detached{
+            let tempPaper = await AdsQuery(paperId: paper.bibcode)
+            paper.objects = tempPaper.objects
+            //paper.authors = tempPaper.authors
+            paper.abstract = tempPaper.abstract
+        }
+        do { try context.save() }
+        catch { print("Error saving changes: \(error)") }
+        
     }
 }
 

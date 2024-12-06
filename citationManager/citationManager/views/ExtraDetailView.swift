@@ -35,6 +35,7 @@ struct ExtraDetailView: View {
             PdfView(paper: paper!, inspectorIsShown: $inspectorIsShown)
                 .environmentObject(navigationManager)
                 .navigationTitle(paper!.title)
+                .navigationSubtitle(ShortAuthorList(paper: paper!))
                 .inspector(isPresented: $inspectorIsShown) {
                     InspectorView(paper: paper!)
                 }
@@ -49,12 +50,18 @@ struct ExtraDetailView: View {
             Text("Error while loading paper")
         }
     }
-}
-/*
-struct Detailview_Prieviews: PreviewProvider {
-    static var previews: some View {
-        DetailView(inspectorIsShown: .constant(false))
-            .environmentObject(NavigationStateManager())
+    
+    func ShortAuthorList(paper: Paper) -> String {
+        let allAuthors: [String] = paper.authors.sorted(by: {$0.timestamp < $1.timestamp}).map({$0.name})
+        
+        if allAuthors.count == 1 {
+            return allAuthors[0]
+        }
+        else if paper.authors.count == 2 {
+            return allAuthors[0] + " & " + allAuthors[1]
+        }
+        else {
+            return allAuthors[0] + " et al."
+            }
     }
 }
-*/

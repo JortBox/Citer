@@ -91,7 +91,7 @@ struct PaperView: View {
                     })
                     .buttonStyle(CustomButton())
                     
-                    if paper.new {
+                    if paper.new && navigationManager.selectedPaper != paper {
                         Text("New").bold().foregroundStyle(.accent)
                     }
                     
@@ -144,7 +144,7 @@ struct PaperView: View {
         }
         .swipeActions {
             switch category {
-            case .all, .unread, .read, .favourites, .readingList, .authors, .keywords:
+            case .all, .unread, .read, .favourites, .readingList, .authors, .keywords, .objects:
                 Button("Delete", systemImage: "trash", role: .destructive) {
                     deletePaper(paper)
                 }

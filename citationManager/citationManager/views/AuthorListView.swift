@@ -35,7 +35,7 @@ struct AuthorPerLetterView: View {
                     ForEach(authors.filter({$0.name.lowercased().starts(with: char)})) { author in
                         //Group{
                             Label(author.name, systemImage: "person")
-                                //.badge(papers.filter({$0.authors.map({$0.name}).contains(author.name)}).count)
+                                .badge(papers.filter({$0.authors.map({$0.name}).contains(author.name)}).count)
                         //}
                         .tag(author)
                     }

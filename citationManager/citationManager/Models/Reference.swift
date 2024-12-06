@@ -10,7 +10,7 @@ import SwiftData
 
 @Model
 final class Reference {
-    let id = UUID()
+    var id = UUID()
     var bibcode: String
     var title: String
     var year: String

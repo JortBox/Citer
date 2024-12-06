@@ -14,6 +14,7 @@ struct MiddleView: View {
     @Query(sort: \Paper.title, animation: .default) var papers: [Paper]
     @Query(sort: \Author.name, animation: .default) var authors: [Author]
     @Query(sort: \Keyword.full, animation: .default) var keywords: [Keyword]
+    @Query(sort: \Object.name, animation: .default) var objects: [Object]
     
     @Binding var searchTerm: String
     @State private var sortOption: SortOption = .dateAdded
@@ -60,7 +61,7 @@ struct MiddleView: View {
                                   paperViewMode: .small)
                     
                 case .tags(let PaperGroup):
-                    PaperListView(papers: PaperGroup.papers,
+                    PaperListView(papers: papers.filter({PaperGroup.paperId.contains($0.bibcode)}),
                                   category: category,
                                   sortOption: $sortOption,
                                   paperViewMode: .small)
@@ -70,7 +71,11 @@ struct MiddleView: View {
                     
                 case .keywords:
                     KeywordListView(keywords: keywords)
+                    
+                case .objects:
+                    ObjectListView(objects: objects)
                 }
+                
             
             } else {
                 switch category {
@@ -84,6 +89,8 @@ struct MiddleView: View {
                     AuthorListView(authors: authors.filter({$0.name.localizedCaseInsensitiveContains(searchTerm)}))
                 case .keywords:
                     KeywordListView(keywords: keywords.filter({$0.full.localizedCaseInsensitiveContains(searchTerm)}))
+                case .objects:
+                    ObjectListView(objects: objects.filter({$0.name.localizedCaseInsensitiveContains(searchTerm)}))
                 }
             }
             

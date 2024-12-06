@@ -31,6 +31,8 @@ struct SidebarView: View {
             return 0
         case .keywords:
             return 0
+        case .objects:
+            return 0
         case .readingList:
             return papers.filter({$0.inReadingList}).count
         case .list(let PaperGroup):
@@ -59,13 +61,17 @@ struct SidebarView: View {
                 Group {
                     Label(Category.keywords.title(), systemImage: Category.keywords.iconName)
                 }.tag(Category.keywords)
+                
+                Group {
+                    Label(Category.objects.title(), systemImage: Category.objects.iconName)
+                }.tag(Category.objects)
             }
             
             Section("Collections") {
                 ForEach(collections) { collection in
                     @Bindable var collection = collection
                     HStack{
-                        Image(systemName: "square.3.stack.3d").foregroundStyle(.primary)
+                        Image(systemName: "tray.2").foregroundStyle(.primary)
                         TextField("New Collection", text: $collection.title)
                             .badge(collection.papers.count)
                     }
@@ -84,7 +90,7 @@ struct SidebarView: View {
                         HStack{
                             Image(systemName: "number").foregroundStyle(.primary)
                             TextField("New Tag", text: $tag.title)
-                            .badge(tag.papers.count)
+                            .badge(tag.paperId.count)
                         }
                         .tag(Category.tags(tag))
                         .contextMenu {

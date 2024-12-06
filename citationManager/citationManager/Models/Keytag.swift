@@ -10,17 +10,19 @@ import SwiftData
 
 @Model
 final class Tag {
-    let id = UUID()
+    var id = UUID()
     var title: String
     var displayTitle: String
     var creationDate: Date
-    var papers = [Paper]()
+    var papers: [Paper]
+    var paperId = [String]()
     
-    init(title: String, papers: [Paper] = [Paper]()) {
+    init(title: String, papers: [Paper] = []) {
         self.title = title
         self.papers = papers
         self.creationDate = Date()
         self.displayTitle = String("#\(title)")
+        self.paperId = paperId
         
     }
 }

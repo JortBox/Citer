@@ -18,7 +18,6 @@ struct ReferenceView: View {
     let reference: Reference
     
     @State private var inLibrary: Bool =  false
-    @State private var showFullTitle: Bool = false
     
     var body: some View {
         Label {

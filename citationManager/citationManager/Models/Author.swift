@@ -10,10 +10,10 @@ import SwiftData
 
 @Model
 final class Author {
-    let id = UUID()
+    var id = UUID()
     var name: String
     var surname: String
-    let timestamp: Date
+    var timestamp: Date
     
     init(name: String, timestamp: Date = Date()) {
         self.name = name

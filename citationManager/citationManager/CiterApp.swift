@@ -55,5 +55,10 @@ struct CiterApp: App {
             } else { ErrorPaperView() }
         }
         .modelContainer(sharedModelContainer)
+        
+        Settings {
+            SettingsView()
+                .frame(width: 400, height: 150)
+        }
     }
 }

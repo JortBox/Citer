@@ -10,7 +10,7 @@ import SwiftData
 
 @Model
 final class Collection {
-    let id = UUID()
+    var id = UUID()
     var title: String
     var dateAdded: Date
     var papers = [Paper]()

@@ -44,24 +44,20 @@ struct PaperContextMenu: View {
         Menu("Tags") {
             Button("New Tag") {
                 let newTag = Tag(title: "New Tag")
-                newTag.papers.append(paper)
+                newTag.paperId.append(paper.bibcode)
                 context.insert(newTag)
                 
             }
             Divider()
             ForEach(tags) { tag in
                 Button(action: {
-                    if !tag.papers.contains(paper) {
-                        tag.papers.append(paper)
+                    if !tag.paperId.contains(paper.bibcode) {
+                        tag.paperId.append(paper.bibcode)
                     } else {
-                        tag.papers.removeAll(where: {$0.bibcode == paper.bibcode})
+                        tag.paperId.removeAll(where: {$0 == paper.bibcode})
                     }
                 }, label: {
-                    if !tag.papers.contains(paper) {
-                        Text("#\(tag.title)")
-                    } else {
-                        Text("✓ #\(tag.title)")
-                    }
+                    Text(tag.paperId.contains(paper.bibcode) ? "✓ #\(tag.title)" : "#\(tag.title)")
                 })
             }
         }
@@ -69,24 +65,34 @@ struct PaperContextMenu: View {
         Button("Copy Bibcode") { NSPasteboard.general.setString("\(paper.bibcode)" , forType: .string) }
         Divider()
         Button("Info") { openWindow(id: "Info", value: paper.id) }
+        if let link = paper.webLink {
+            Link("View on ADS", destination: link)
+                .foregroundStyle(.blue)
+                .frame(alignment: .leading)
+        }
         Divider()
         Button("Delete Paper") {
             deletePaper(paper)
         }
     }
     
-    func deletePaper(_ paper: Paper, fromCollectionOnly: Bool = false) {
-        //let container  = context.container
+    func deletePaper(_ paper: Paper, fromCollection: Collection? = nil, fromTag: Tag? = nil) {
         
-        for collection in collections {
-            if collection.title == navigationManager.selectedCategory?.title() {
-                collection.papers.removeAll(where: {$0.bibcode == paper.bibcode})
-            }
+        if let collection = fromCollection {
+            collection.papers.removeAll(where: {$0.bibcode == paper.bibcode})
         }
         
-        if !fromCollectionOnly{
+        if let tag = fromTag {
+            tag.paperId.removeAll(where: {$0 == paper.bibcode})
+        }
+
+        if fromCollection == nil && fromTag == nil{
+            for collection in collections {
+                collection.papers.removeAll(where: {$0.bibcode == paper.bibcode})
+            }
+            
             for tag in tags {
-                tag.papers.removeAll(where: {$0.bibcode == paper.bibcode})
+                tag.paperId.removeAll(where: {$0 == paper.bibcode})
             }
             
             navigationManager.selectedAuthor = nil

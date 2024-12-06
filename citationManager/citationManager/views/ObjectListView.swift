@@ -8,56 +8,33 @@
 import SwiftUI
 import SwiftData
 
-struct AuthorListView: View {
-    @EnvironmentObject var navigationManager: NavigationStateManager
-    
-    let authors: [Author]
-    
-    var body: some View {
-        AuthorPerLetterView(authors: authors.unique(by: {$0.name}))
-            .listStyle(.inset(alternatesRowBackgrounds: true))
-            .navigationTitle(navigationManager.selectedCategory?.title() ?? "")
-            .navigationSubtitle(navigationManager.selectedAuthor?.name ?? "")
-    }
-}
-
-struct AuthorPerLetterView: View {
-    @EnvironmentObject var navigationManager: NavigationStateManager
+struct ObjectListView: View {
     @Query var papers: [Paper]
+    @EnvironmentObject var navigationManager: NavigationStateManager
     
-    let authors: [Author]
-    var alphabet: [String] = "abcdefghijklmnopqrstuvwxyz".map({String($0)})
+    let objects: [Object]
     
     var body: some View {
-        List(selection: $navigationManager.selectedAuthor) {
-            ForEach(alphabet, id: \.self) {char in
-                Section(char.uppercased()) {
-                    ForEach(authors.filter({$0.name.lowercased().starts(with: char)})) { author in
-                        //Group{
-                            Label(author.name, systemImage: "person")
-                                .badge(papers.filter({$0.authors.map({$0.name}).contains(author.name)}).count)
-                        //}
-                        .tag(author)
+        List(selection: $navigationManager.selectedObject) {
+            ForEach(objects.unique(by: {$0.display})) { object in
+                let NEDLink = URL(string: "https://ned.ipac.caltech.edu/byname?objname=\(object.name.replacingOccurrences(of: "_", with: "+"))")
+                Label(object.display, systemImage: "hurricane")
+                    .badge(papers.filter({$0.objects.map({$0.name}).contains(object.name)}).count)
+                    .tag(object)
+                    .contextMenu {
+                        if let link = NEDLink {
+                            Link("View on NASA Extragalactic Database (NED)", destination: link)
+                                .foregroundStyle(.blue)
+                                .frame(alignment: .leading)
+                        }
                     }
-                }
             }
         }
+        .listStyle(.inset(alternatesRowBackgrounds: true))
+        .navigationTitle(navigationManager.selectedCategory?.title() ?? "")
+        .navigationSubtitle(navigationManager.selectedObject?.display ?? "")
     }
 }
 
 
     
-extension Array {
-    func unique<T:Hashable>(by: ((Element) -> (T)))  -> [Element] {
-        var set = Set<T>()
-        var arrayOrdered = [Element]()
-        
-        for value in self {
-            if !set.contains(by(value)) {
-                set.insert(by(value))
-                arrayOrdered.append(value)
-            }
-        }
-        return arrayOrdered
-    }
-}

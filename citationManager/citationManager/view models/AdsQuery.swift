@@ -13,7 +13,7 @@ private let maxResultsKey = "rows"
 
 
 func AdsQuery(paperId: String, completion: @escaping (Paper) -> Void) {
-    let fieldsList = ["bibcode", "title", "author", "doi", "identifier", "reference", "year", "abstract","links_data", "keyword", "keyword_norm", "keyword_schema"]
+    let fieldsList = ["bibcode", "title", "author", "doi", "identifier", "reference", "year", "abstract","links_data", "keyword", "keyword_norm", "keyword_schema", "nedid"]
     let session = URLSession.shared
     var url: URL {
         var components = URLComponents()
@@ -39,7 +39,7 @@ func AdsQuery(paperId: String, completion: @escaping (Paper) -> Void) {
     
     request.setValue("Bearer:"+token, forHTTPHeaderField: "Authorization")
     session.dataTask(with: request) { data, response, error in
-        //print("response ADS: ", response?.description as Any)
+        print("response ADS: ", response?.description as Any)
         if let data = data {
             print(String(data: data, encoding: .utf8)!)
             let paper = DecodeAdsPaper(jsonData: data,  paperId: paperId)
@@ -77,6 +77,7 @@ func DecodeAdsPaper(jsonData: Data, paperId: String) -> Paper {
                     var abstractTemp: String = "Not Availible"
                     var doiTemp: String = ""
                     var arXivIdTemp: String = ""
+                    var nedIdTemp: [Object] = []
                     var authorsTemp: [Author] = []
                     var referencesTemp: [String] = []
                     var keywordsTemp: [Keyword] = []
@@ -103,6 +104,13 @@ func DecodeAdsPaper(jsonData: Data, paperId: String) -> Paper {
                             doiTemp = doi.first!
                         }
                     } else { print("doi failed") }
+                    
+                    if let nedId = article["nedid"] as? [String] {
+                        for nedIdCode in nedId {
+                            nedIdTemp.append(Object(nedIdCode))
+                        }
+                    }
+                    else { print("nedid failed") }
                     
                     if let arXivId = article["identifier"] as? [String] {
                         if !arXivId.isEmpty {
@@ -172,7 +180,8 @@ func DecodeAdsPaper(jsonData: Data, paperId: String) -> Paper {
                                   doi: doiTemp,
                                   year: yearTemp,
                                   referenceIds: referencesTemp,
-                                  keywords: keywordsTemp
+                                  keywords: keywordsTemp,
+                                  objects: nedIdTemp
                                   )
                     
                     download(url: paper.pdfLink!, toFile: paper.docLink!) { (error) in

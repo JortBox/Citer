@@ -10,7 +10,7 @@ import SwiftData
 
 @Model
 final class Keyword {
-    let id = UUID()
+    var id = UUID()
     var full: String
     var subKeywords = [SubKeyword]()
     var value: String
@@ -34,9 +34,9 @@ final class Keyword {
 
 @Model
 final class SubKeyword {
-    let id = UUID()
+    var id = UUID()
     var value: String
-    let timestamp: Date
+    var timestamp: Date
     
     init(_ value: String) {
         self.value = value
