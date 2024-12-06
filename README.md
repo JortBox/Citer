@@ -1,4 +1,4 @@
-# Citer 
+# Citer (SwiftUI application)
 ## Astronomical Reference manager for MacOS
 
 Reference manager written in swift developed for MacOS.
