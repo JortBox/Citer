@@ -132,7 +132,9 @@ struct TileView: View {
                     .overlay(alignment: .topLeading) {
                         if paper.favourite {
                             Image(systemName: "star.fill")
-                                .foregroundStyle(.accent)
+                                .background(.yellow)
+                                .cornerRadius(3)
+                                .foregroundStyle(.primary)
                                 .padding()
                                 .font(.system(size: 20))
                         }

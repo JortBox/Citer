@@ -140,9 +140,10 @@ struct PaperView: View {
             }
         } icon: {
             Image(systemName: paper.favourite ? "star.fill" : "")
+                .foregroundColor(.yellow)
             
         }
-        .swipeActions {
+        .swipeActions(edge: .trailing) {
             switch category {
             case .all, .unread, .read, .favourites, .readingList, .authors, .keywords, .objects:
                 Button("Delete", systemImage: "trash", role: .destructive) {
@@ -157,6 +158,16 @@ struct PaperView: View {
                     deletePaper(paper, fromTag: tag)
                 }
             }
+            
+        }
+        .swipeActions(edge: .leading) {
+            Button(paper.read ? "Unread" : "Read", systemImage: paper.read ? "eye.slash" : "eye") {
+                paper.read.toggle()
+            }
+            Button(paper.favourite ? "Remove Favourite" : "Favourite", systemImage: paper.favourite ? "star.slash.fill" : "star.fill") {
+                paper.favourite.toggle()
+            }.tint(.yellow)
+            
             
         }
         .contextMenu {

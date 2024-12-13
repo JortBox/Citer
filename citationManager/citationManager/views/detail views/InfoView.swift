@@ -70,11 +70,15 @@ struct InfoView: View {
                                 .frame(width: 250)
                                 .padding()
                                 .onSubmit {
-                                    let newTag = Tag(title: tagName)
-                                    newTag.paperId.append(paper.bibcode)
-                                    context.insert(newTag)
-                                    tagName = ""
-                                    popoverIsPresented.toggle()
+                                    if !tags.map({$0.title}).contains(tagName) {
+                                        let newTag = Tag(title: tagName)
+                                        newTag.paperId.append(paper.bibcode)
+                                        context.insert(newTag)
+                                        tagName = ""
+                                        popoverIsPresented.toggle()
+                                    } else {
+                                        tagName = "Tag already exists"
+                                    }
                                 }
                         }
                     }

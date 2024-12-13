@@ -14,11 +14,14 @@ struct ToolbarView: View {
     @Query(sort: \Paper.title, animation: .default) var papers: [Paper]
     
     @EnvironmentObject var navigationManager: NavigationStateManager
+    @Environment(\.openSettings) private var openSettings
     
     @Binding var inspectorIsShown: Bool
     @State private var popoverIsShown: Bool = false
     @State private var addPaperLink: String = ""
-
+    //@AppStorage("adsToken") var adsToken: String?
+    //@State private var adsToken: String = UserDefaults.standard.string(forKey: "adsToken") ?? ""
+    
     var body: some View {
         HStack{
             Button(action: {
@@ -29,6 +32,8 @@ struct ToolbarView: View {
             })
             .buttonStyle(.accessoryBar)
             .popover(isPresented: $popoverIsShown, arrowEdge: .bottom) {
+                let adsToken: String = UserDefaults.standard.string(forKey: "adsToken") ?? ""
+                
                 VStack(alignment: .trailing) {
                     TextField("Add paper with ADS bibcode", text: $addPaperLink)
                         .textFieldStyle(.roundedBorder)
@@ -46,16 +51,29 @@ struct ToolbarView: View {
                         .padding(.horizontal)
                         .padding(.top, -5)
                     
-                    Button(action: {
-                        addPaperLink = ""
-                        popoverIsShown.toggle()
-                        openWindow(id: "Form")
+                    HStack(alignment: .bottom) {
+                        Button(action: {
+                            openSettings()
+                        }, label: {
+                            Label(adsToken.isEmpty ? "Token Missing" : "Token Active", systemImage: adsToken.isEmpty ? "exclamationmark.triangle.fill" :"checkmark.circle.fill")
+                                .font(.footnote)
+                        })
+                        .buttonStyle(.borderless)
+                        .foregroundStyle(adsToken.isEmpty ? Color.orange : Color.green)
                         
-                    }, label: {
-                        Label("Add manually", systemImage: "plus")
-                            .font(.footnote)
-                    })
-                    .buttonStyle(.accessoryBarAction)
+                        Spacer()
+                        
+                        Button(action: {
+                            addPaperLink = ""
+                            popoverIsShown.toggle()
+                            openWindow(id: "Form")
+                            
+                        }, label: {
+                            Label("Add manually", systemImage: "plus")
+                                .font(.footnote)
+                        })
+                        .buttonStyle(.accessoryBarAction)
+                    }
                     .padding(.horizontal)
                     .padding(.bottom)
                 }

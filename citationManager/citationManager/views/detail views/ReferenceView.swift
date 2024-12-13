@@ -105,9 +105,9 @@ struct ReferenceView: View {
         } icon: {
             let adsIds = papers.map({$0.bibcode})
             if adsIds.contains(reference.bibcode) {
-                Image(systemName: "doc.append.fill.rtl").foregroundColor(.accentColor)
+                Image(systemName: "quote.bubble.fill.rtl").foregroundColor(.accentColor)
             } else {
-                Image(systemName: "doc.append.rtl").foregroundColor(.primary)
+                Image(systemName: "quote.bubble.rtl").foregroundColor(.primary)
             }
         }
     }

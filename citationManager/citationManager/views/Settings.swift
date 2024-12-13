@@ -34,8 +34,8 @@ struct SettingsView: View {
 struct TokenSettingsView: View {
     @Environment(\.openURL) var openURL
     @State private var tokenText: String = ""
-    @AppStorage("adsToken") private var adsToken: String = ""
-
+    //@AppStorage("adsToken") private var adsToken: String = ""
+    @State private var adsToken: String = UserDefaults.standard.string(forKey: "adsToken") ?? ""
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -50,6 +50,7 @@ struct TokenSettingsView: View {
             Form {
                 TextField("Add Token", text: $tokenText)
                     .onSubmit() {
+                        UserDefaults.standard.set(tokenText, forKey: "adsToken")
                         adsToken = tokenText
                         tokenText = ""
                     }

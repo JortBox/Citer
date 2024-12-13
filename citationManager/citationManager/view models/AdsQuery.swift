@@ -1,8 +1,6 @@
 import Foundation
 
-// https://api.adsabs.harvard.edu/v1/search/query?q=arXiv%3Aastro-ph%2F9808147&fl=title%2C+author%2C+doi%2C+identifier%2C+reference
-
-private let token = "vEEfhBQylrWP6SvhgqOpwXYZboBmSB6lBcj6M0Rf"
+private let token = UserDefaults.standard.string(forKey: "adsToken") ?? ""
 private let scheme = "https"
 private let host = "api.adsabs.harvard.edu"
 private let path = "/v1/search/"
@@ -10,7 +8,6 @@ private let path = "/v1/search/"
 private let searchQueryKey = "q"
 private let fieldsKey = "fl"
 private let maxResultsKey = "rows"
-
 
 func AdsQuery(paperId: String, completion: @escaping (Paper) -> Void) {
     let fieldsList = ["bibcode", "title", "author", "doi", "identifier", "reference", "year", "abstract","links_data", "keyword", "keyword_norm", "keyword_schema", "nedid"]

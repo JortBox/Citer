@@ -90,7 +90,7 @@ struct SidebarView: View {
                         HStack{
                             Image(systemName: "number").foregroundStyle(.primary)
                             TextField("New Tag", text: $tag.title)
-                            .badge(tag.paperId.count)
+                                .badge(tag.paperId.count)
                         }
                         .tag(Category.tags(tag))
                         .contextMenu {
@@ -98,24 +98,18 @@ struct SidebarView: View {
                         }
                     }
                 } label: {
-                    Label("tags", systemImage: "tag")
+                    Label("Tags", systemImage: "tag")
                 }
             }
-             
+            
         }
         .safeAreaInset(edge: .bottom)  {
-            Button(action: {
-                context.insert(Collection(title: "New Collection"))
-            }, label: {
-                Label("New Collection", systemImage: "plus.circle")
-            })
-            .buttonStyle(.borderless)
-            .foregroundStyle(.accent)
-            .padding()
-            .frame(maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/, alignment: .leading)
+            SidebarInsetView()
         }
     }
 }
+
+
 
 //#Preview {
 //    SidebarView()
