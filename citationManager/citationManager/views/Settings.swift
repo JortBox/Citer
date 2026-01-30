@@ -26,7 +26,7 @@ struct SettingsView: View {
                 .tag(Tabs.advanced)
         }
         .padding(20)
-        .frame(width: 375, height: 150)
+        .frame(width: 375, height: 300)
     }
 }
 
@@ -34,7 +34,6 @@ struct SettingsView: View {
 struct TokenSettingsView: View {
     @Environment(\.openURL) var openURL
     @State private var tokenText: String = ""
-    //@AppStorage("adsToken") private var adsToken: String = ""
     @State private var adsToken: String = UserDefaults.standard.string(forKey: "adsToken") ?? ""
 
     var body: some View {
@@ -57,26 +56,38 @@ struct TokenSettingsView: View {
             }
         }
         //.padding(20)
-        .frame(width: 350, height: 130)
+        //.frame(width: 350, height: 130)
     }
 }
 
 struct GeneralSettingsView: View {
-    //@AppStorage("showPreview") private var showPreview = true
-    //@AppStorage("fontSize") private var fontSize = 12.0
-
-
+    @State private var showTags: Bool = UserDefaults.standard.bool(forKey: "showTags")
+    @State private var maxRows: Int = UserDefaults.standard.integer(forKey: "maxRows")
+    @State private var maxRowsText: String = String(UserDefaults.standard.integer(forKey: "maxRows"))
+    
     var body: some View {
-        Text("No General settings yet.")
-        /*
-        Form {
-            Toggle("Show Previews", isOn: $showPreview)
-            Slider(value: $fontSize, in: 9...96) {
-                Text("Font Size (\(fontSize, specifier: "%.0f") pts)")
+        VStack {
+            Image("LogoCompact")
+                .resizable()
+                .frame(width: 225, height: 130)
+                //.padding()
+            Form {
+                Toggle("Show tags in paper list", isOn: $showTags)
+                    .toggleStyle(SwitchToggleStyle(tint: .accent))
+                    .onChange(of: showTags, updateSetting)
+                
+                TextField("Max rows in Catalog Query (-1 for all entries)", text: $maxRowsText)
+                    .onSubmit() {
+                        maxRows = Int(maxRowsText) ?? 50
+                        maxRowsText = String(maxRows)
+                        updateSetting()
+                    }
             }
         }
-        .padding(20)
-        .frame(width: 350, height: 100)
-         */
+    }
+    
+    func updateSetting() -> Void {
+        UserDefaults.standard.set(showTags, forKey: "showTags")
+        UserDefaults.standard.set(maxRows, forKey: "maxRows")
     }
 }

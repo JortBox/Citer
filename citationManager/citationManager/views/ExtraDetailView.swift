@@ -16,6 +16,7 @@ struct ExtraDetailView: View {
     @State private var showPdfSearch: Bool = false
     @State private var PdfSearchText: String = ""
     @State private var selectedSearchResult: Int = 1
+    @State private var inspectorTab: tabSelection = .bibliography
     
     let paperId: UUID
     var paper: Paper? = nil
@@ -37,7 +38,7 @@ struct ExtraDetailView: View {
                 .navigationTitle(paper!.title)
                 .navigationSubtitle(ShortAuthorList(paper: paper!))
                 .inspector(isPresented: $inspectorIsShown) {
-                    InspectorView(paper: paper!)
+                    InspectorView(paper: paper!, inspectorTab: $inspectorTab)
                 }
                 .onAppear { paper!.new = false }
             

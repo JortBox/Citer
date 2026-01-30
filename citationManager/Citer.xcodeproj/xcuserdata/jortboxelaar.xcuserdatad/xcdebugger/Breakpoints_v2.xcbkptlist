@@ -3,4 +3,20 @@
    uuid = "3F687119-0DB0-4E28-B5F5-1FA97F368D83"
    type = "1"
    version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "ECE32DA8-0358-49A8-B167-C41BD145B16A"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../../../../var/folders/rq/lfphrsl13q5dl_hvfqgqs0_c0000gn/T/swift-generated-sources/@__swiftmacro_5Citer15TableWindowViewV6tables5QueryfMp_.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "1"
+            endingLineNumber = "1">
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
 </Bucket>

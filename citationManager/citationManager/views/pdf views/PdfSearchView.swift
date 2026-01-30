@@ -42,7 +42,7 @@ struct PdfSearchView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField("Search", text: $searchText)
+                TextField("Search PDF", text: $searchText)
                     .textFieldStyle(.roundedBorder)
                     .onChange(of: searchText) { selectedSearchResult = 1 }
                 if !searchText.isEmpty {
@@ -59,7 +59,7 @@ struct PdfSearchView: View {
                     selectedSearchResult -= 1
                 }
             } label: { Image(systemName: "chevron.backward") }
-                .buttonStyle(.accessoryBarAction)
+                .buttonStyle(.glass)
             
             Button {
                 if selectedSearchResult == matches {
@@ -68,21 +68,22 @@ struct PdfSearchView: View {
                     selectedSearchResult += 1
                 }
             } label: { Image(systemName: "chevron.forward") }
-                .buttonStyle(.accessoryBarAction)
+                .buttonStyle(.glass)
                 .keyboardShortcut(.return)
             
             Button("Done") {
                 searchText = ""
                 withAnimation {
                     showPdfSearch = false
+                    
                 }
             }
             .keyboardShortcut(.cancelAction)
-            .buttonStyle(.accessoryBarAction)
+            .buttonStyle(.glassProminent)
             
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 5)
-        .background(.clear)
+        //.background(.clear)
     }
 }

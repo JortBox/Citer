@@ -13,22 +13,35 @@ struct ObjectListView: View {
     @EnvironmentObject var navigationManager: NavigationStateManager
     
     let objects: [Object]
+    @Binding var searchTerm: String
     
     var body: some View {
-        List(selection: $navigationManager.selectedObject) {
-            ForEach(objects.unique(by: {$0.display})) { object in
-                let NEDLink = URL(string: "https://ned.ipac.caltech.edu/byname?objname=\(object.name.replacingOccurrences(of: "_", with: "+"))")
-                Label(object.display, systemImage: "hurricane")
-                    .badge(papers.filter({$0.objects.map({$0.name}).contains(object.name)}).count)
-                    .tag(object)
-                    .contextMenu {
-                        if let link = NEDLink {
-                            Link("View on NASA Extragalactic Database (NED)", destination: link)
-                                .foregroundStyle(.blue)
-                                .frame(alignment: .leading)
-                        }
-                    }
+        let filteredObjects: [Object] = {
+            if !searchTerm.isEmpty {
+                return objects.filter({$0.display.localizedCaseInsensitiveContains(searchTerm)})
+            } else {
+                return objects
             }
+        }()
+        
+        List(filteredObjects.unique(by: {$0.display}), selection: $navigationManager.selectedObject) { object in
+            let SIMBADLink = URL(string: "https://simbad.u-strasbg.fr/simbad/sim-basic?Ident=\(object.name.replacingOccurrences(of: "_", with: " "))")
+            let NEDLink = URL(string: "https://ned.ipac.caltech.edu/byname?objname=\(object.name.replacingOccurrences(of: "_", with: "+"))")
+            Label(object.display, systemImage: "hurricane")
+                //.badge(papers.filter({$0.objects.map({$0.name}).contains(object.name)}).count)
+                .tag(object)
+                .contextMenu {
+                    if let link1 = SIMBADLink {
+                        Link("View on SIMBAD (Strasbourg)", destination: link1)
+                            .foregroundStyle(.blue)
+                            .frame(alignment: .leading)
+                    }
+                    if let link2 = NEDLink {
+                        Link("View on NASA Extragalactic Database (NED)", destination: link2)
+                            .foregroundStyle(.blue)
+                            .frame(alignment: .leading)
+                    }
+                }
         }
         .listStyle(.inset(alternatesRowBackgrounds: true))
         .navigationTitle(navigationManager.selectedCategory?.title() ?? "")

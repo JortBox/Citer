@@ -10,7 +10,7 @@ private let fieldsKey = "fl"
 private let maxResultsKey = "rows"
 
 func AdsQuery(paperId: String, completion: @escaping (Paper) -> Void) {
-    let fieldsList = ["bibcode", "title", "author", "doi", "identifier", "reference", "year", "abstract","links_data", "keyword", "keyword_norm", "keyword_schema", "nedid"]
+    let fieldsList = ["bibcode", "title", "author", "doi", "identifier", "reference", "year", "abstract","links_data", "keyword", "keyword_norm", "keyword_schema", "nedid", "date", "issue", "pub", "volume", "bibstem", "page_range", "page"]
     let session = URLSession.shared
     var url: URL {
         var components = URLComponents()
@@ -33,8 +33,9 @@ func AdsQuery(paperId: String, completion: @escaping (Paper) -> Void) {
     }
     
     var request = URLRequest(url: url)
+    print("token",token)
     
-    request.setValue("Bearer:"+token, forHTTPHeaderField: "Authorization")
+    request.setValue("Bearer "+token, forHTTPHeaderField: "Authorization")
     session.dataTask(with: request) { data, response, error in
         print("response ADS: ", response?.description as Any)
         if let data = data {
@@ -61,7 +62,7 @@ func AdsQuery(paperId: String) async -> Paper {
 func DecodeAdsPaper(jsonData: Data, paperId: String) -> Paper {
     let series = try? JSONSerialization.jsonObject(with: jsonData, options: [])
     let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
-    let paper: Paper
+    var paper: Paper
     
     if let dictionary = series as? [String: Any] {
         if let response = dictionary["response"] as? [String: Any] {
@@ -79,6 +80,14 @@ func DecodeAdsPaper(jsonData: Data, paperId: String) -> Paper {
                     var referencesTemp: [String] = []
                     var keywordsTemp: [Keyword] = []
                     var pdfURL: String = ""
+                    var VizierCatalogTemp: [Catalog] = []
+                    var dateTemp: String = ""
+                    var issueTemp: String = ""
+                    var volumeTemp: String = ""
+                    //var pubTemp: String = ""
+                    var pagesTemp: String = ""
+                    var bibstemTemp: String = ""
+                    
                     
                     if let bibcode = article["bibcode"] as? String {
                         bibcodeTemp = bibcode
@@ -143,12 +152,40 @@ func DecodeAdsPaper(jsonData: Data, paperId: String) -> Paper {
                         }
                     } else { print("reference failed") }
                     
+                    //"date", "issue", "pub", "volume", "bibstem", "page_range", "page"
+                    if let date = article["date"] as? String {
+                        dateTemp = date
+                    } else { print("date failed") }
+                    
+                    if let issue = article["issue"] as? String {
+                        issueTemp = issue
+                    } else { print("issue failed") }
+                    
+                    if let volume = article["volume"] as? String {
+                        volumeTemp = volume
+                    } else { print("volume failed") }
+                    
+                    if let bibstem = article["bibstem"] as? [String] {
+                        bibstemTemp = bibstem.first ?? ""
+                    } else { print("bibstem failed") }
+                    
+                    if let page_range = article["page_range"] as? String {
+                        pagesTemp = page_range
+                    } else if let page = article["page"] as? [String] {
+                        pagesTemp = page.first ?? ""
+                    } else { print("page failed") }
+                    
                     if let linksData = article["links_data"] as? [Any] {
                         if !linksData.isEmpty {
-                            for case let linkData as [String: Any] in linksData {
-                                if linkData["type"] as! String == "pdf" {
-                                    pdfURL = linkData["url"] as! String
-                                }
+                            for linkData in linksData {
+                                if let dict: [String: Any] = convertToDictionary(text: linkData as! String) {
+                                    if dict["type"] as! String == "pdf" {
+                                        pdfURL = dict["url"] as! String
+                                    }
+                                    else if dict["type"] as! String == "data" {
+                                        VizierCatalogTemp.append(Catalog(dict["url"] as! String))
+                                    }
+                                } else { print("linkData failed") }
                             }
                         }
                     }
@@ -178,9 +215,13 @@ func DecodeAdsPaper(jsonData: Data, paperId: String) -> Paper {
                                   year: yearTemp,
                                   referenceIds: referencesTemp,
                                   keywords: keywordsTemp,
-                                  objects: nedIdTemp
+                                  objects: nedIdTemp,
+                                  catalogs: VizierCatalogTemp
                                   )
                     
+                    paper = ExportCitation(paper: paper, date: dateTemp, issue: issueTemp, volume: volumeTemp, bibstem: bibstemTemp, pages: pagesTemp)
+                    print(paper.citation)
+                    print(paper.citationWarning)
                     download(url: paper.pdfLink!, toFile: paper.docLink!) { (error) in
                         if (error != nil) {
                             print(error!.localizedDescription)
@@ -197,10 +238,8 @@ func DecodeAdsPaper(jsonData: Data, paperId: String) -> Paper {
 
 
 
-
-
 func ReferencesQuery(paperIds: [String], completion: @escaping ([Reference]) -> Void) {
-    let fieldsList = ["bibcode", "identifier", "doi", "title", "year", "author"]
+    let fieldsList = ["bibcode", "identifier", "doi", "title", "year", "author", "date", "issue", "pub", "volume", "bibstem", "page_range", "page"]
     let session = URLSession.shared
     var bodyDataString: String = "bibcode"
     
@@ -230,7 +269,7 @@ func ReferencesQuery(paperIds: [String], completion: @escaping ([Reference]) -> 
     
     var request = URLRequest(url: url)
     
-    request.setValue("Bearer:"+token, forHTTPHeaderField: "Authorization")
+    request.setValue("Bearer "+token, forHTTPHeaderField: "Authorization")
     request.setValue("big-query/csv", forHTTPHeaderField: "Content-Type")
     request.httpMethod = "POST"
     request.httpBody = bodyDataString.data(using: .utf8)
@@ -272,6 +311,11 @@ func DecodeAdsReference(jsonData: Data) -> [Reference] {
                     var doiTemp: String = ""
                     var arXivIdTemp: String = ""
                     var authorsTemp: [String] = []
+                    var dateTemp: String = ""
+                    var issueTemp: String = ""
+                    var volumeTemp: String = ""
+                    var pagesTemp: String = ""
+                    var bibstemTemp: String = ""
                     
                     if let bibcode = article["bibcode"] as? String {
                         bibcodeTemp = bibcode
@@ -313,12 +357,37 @@ func DecodeAdsReference(jsonData: Data) -> [Reference] {
                         }
                     } else { print("author failed") }
                     
-                    let reference = Reference(bibcode: bibcodeTemp,
+                    //"date", "issue", "pub", "volume", "bibstem", "page_range", "page"
+                    if let date = article["date"] as? String {
+                        dateTemp = date
+                    } else { print("date failed") }
+                    
+                    if let issue = article["issue"] as? String {
+                        issueTemp = issue
+                    } else { print("issue failed") }
+                    
+                    if let volume = article["volume"] as? String {
+                        volumeTemp = volume
+                    } else { print("volume failed") }
+                    
+                    if let bibstem = article["bibstem"] as? [String] {
+                        bibstemTemp = bibstem.first ?? ""
+                    } else { print("bibstem failed") }
+                    
+                    if let page_range = article["page_range"] as? String {
+                        pagesTemp = page_range
+                    } else if let page = article["page"] as? [String] {
+                        pagesTemp = page.first ?? ""
+                    } else { print("page failed") }
+                    
+                    var reference = Reference(bibcode: bibcodeTemp,
                                               title: titleTemp,
                                               year: yearTemp,
                                               arXivId: arXivIdTemp,
                                               doi: doiTemp,
                                               authors: authorsTemp)
+                    
+                    reference = ExportRefCitation(reference: reference, date:dateTemp, issue:issueTemp, volume: volumeTemp, bibstem: bibstemTemp, pages: pagesTemp)
                     
                     references.append(reference)
                     authorsTemp.removeAll()
@@ -331,7 +400,6 @@ func DecodeAdsReference(jsonData: Data) -> [Reference] {
 
 
 func download(url: URL, toFile file: URL, completion: @escaping (Error?) -> Void) {
-    // Download the remote URL to a file
     let task = URLSession.shared.downloadTask(with: url) {
         (tempURL, response, error) in
         // Early exit on error
@@ -359,4 +427,168 @@ func download(url: URL, toFile file: URL, completion: @escaping (Error?) -> Void
         }
     }
     task.resume()
+}
+
+
+func convertToDictionary(text: String) -> [String: Any]? {
+    if let data = text.data(using: .utf8) {
+        do {
+            return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    return nil
+}
+// http://tapvizier.u-strasbg.fr/TAPVizieR/tap/tables/VIII/65
+
+
+
+func ExportCitation(paper: Paper, date: String, issue: String, volume: String, bibstem: String, pages: String) -> Paper {
+    var citationWarning: Bool = false
+    var citation: String = "@article{\(paper.bibcode),\n"
+    
+    var monthString: String {
+        let month: String = "\(date.split(separator: "-")[1])"
+        if month == "01" { return "month = feb,\n"}
+        else if month == "02" { return "month = feb,\n"}
+        else if month == "03" { return "month = mar,\n"}
+        else if month == "04" { return "month = apr,\n"}
+        else if month == "05" { return "month = may,\n"}
+        else if month == "06" { return "month = jun,\n"}
+        else if month == "07" { return "month = jul,\n"}
+        else if month == "08" { return "month = aug,\n"}
+        else if month == "09" { return "month = sep,\n"}
+        else if month == "10" { return "month = oct,\n"}
+        else if month == "11" { return "month = nov,\n"}
+        else if month == "12" { return "month = dec,\n"}
+        else {
+            citationWarning = true
+            return ""
+        }
+    }
+    
+    var issueString: String {
+        if !issue.isEmpty {
+            return "number = {\(issue)},\n"
+        } else {
+            citationWarning = true
+            return ""
+        }
+    }
+    
+    var keywordsString: String {
+        let keywords = paper.keywords.map({$0.full}).joined(separator: ",")
+        if !keywords.isEmpty {
+            return "keywords = {\(keywords)},\n"
+        } else {
+            citationWarning = true
+            return ""
+        }
+    }
+    
+    var eprintString: String {
+        if !paper.arXivId.isEmpty {
+            return "eprint = {\(paper.arXivId)},\n    archivePrefix {arXiv},\n"
+        } else {
+            citationWarning = true
+            return ""
+        }
+    }
+    
+    var doiString: String {
+        if !paper.doi.isEmpty {
+            return "doi = {\(paper.doi)},\n"
+        } else {
+            citationWarning = true
+            return ""
+        }
+    }
+    
+    let authorList = paper.authors
+        .sorted(by: {$0.timestamp < $1.timestamp})
+        .map({$0.name})
+        .joined(separator: " and ")
+    
+    var citationSuffix: String = "    author = {\(authorList)},\n    title = \"{\(paper.title)}\",\n    year = \(paper.year),\n    \(monthString)    doi = {\(paper.doi)},\n    journal = {\(bibstem)},\n    volume = {\(volume)},\n    \(issueString)    pages = {\(pages)},\n    \(keywordsString)    \(eprintString)    adsurl = {https://ui.adsabs.harvard.edu/abs/\(paper.bibcode)}\n}"
+    citationSuffix = citationSuffix.replacingOccurrences(of: "&", with: "\\&")
+    citationSuffix = citationSuffix.replacingOccurrences(of: "ö", with: "\\\"o")
+    
+    citation.append(citationSuffix)
+    paper.citation = citation
+    paper.citationWarning = citationWarning
+    return paper
+}
+
+func ExportRefCitation(reference: Reference, date: String, issue: String, volume: String, bibstem: String, pages: String) -> Reference {
+    var citationWarning: Bool = false
+    var citation: String = "@article{\(reference.bibcode),\n"
+    
+    var monthString: String {
+        let month: String = "\(date.split(separator: "-")[1])"
+        if month == "01" { return "month = feb,\n"}
+        else if month == "02" { return "month = feb,\n"}
+        else if month == "03" { return "month = mar,\n"}
+        else if month == "04" { return "month = apr,\n"}
+        else if month == "05" { return "month = may,\n"}
+        else if month == "06" { return "month = jun,\n"}
+        else if month == "07" { return "month = jul,\n"}
+        else if month == "08" { return "month = aug,\n"}
+        else if month == "09" { return "month = sep,\n"}
+        else if month == "10" { return "month = oct,\n"}
+        else if month == "11" { return "month = nov,\n"}
+        else if month == "12" { return "month = dec,\n"}
+        else {
+            citationWarning = true
+            return ""
+        }
+    }
+    
+    var issueString: String {
+        if !issue.isEmpty {
+            return "number = {\(issue)},\n"
+        } else {
+            citationWarning = true
+            return ""
+        }
+    }
+    /*
+    var keywordsString: String {
+        let keywords = paper.keywords.map({$0.full}).joined(separator: ",")
+        if !keywords.isEmpty {
+            return "keywords = {\(keywords)},\n"
+        } else {
+            citationWarning = true
+            return ""
+        }
+    }*/
+    
+    var eprintString: String {
+        if !reference.arXivId.isEmpty {
+            return "eprint = {\(reference.arXivId)},\n    archivePrefix {arXiv},\n"
+        } else {
+            citationWarning = true
+            return ""
+        }
+    }
+    
+    var doiString: String {
+        if !reference.doi.isEmpty {
+            return "doi = {\(reference.doi)},\n"
+        } else {
+            citationWarning = true
+            return ""
+        }
+    }
+    
+    let authorList = reference.authors.joined(separator: " and ")
+    
+    var citationSuffix: String = "    author = {\(authorList)},\n    title = \"{\(reference.title)}\",\n    year = \(reference.year),\n    \(monthString)    \(doiString)    journal = {\(bibstem)},\n    volume = {\(volume)},\n    \(issueString)    pages = {\(pages)},\n    \(eprintString)    adsurl = {https://ui.adsabs.harvard.edu/abs/\(reference.bibcode)}\n}"
+    citationSuffix = citationSuffix.replacingOccurrences(of: "&", with: "\\&")
+    citationSuffix = citationSuffix.replacingOccurrences(of: "ö", with: "\\\"o")
+    
+    citation.append(citationSuffix)
+    reference.citation = citation
+    reference.citationWarning = citationWarning
+    return reference
 }

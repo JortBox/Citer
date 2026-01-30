@@ -12,12 +12,25 @@ struct AuthorListView: View {
     @EnvironmentObject var navigationManager: NavigationStateManager
     
     let authors: [Author]
+    @Binding var searchTerm: String
+    
     
     var body: some View {
-        AuthorPerLetterView(authors: authors.unique(by: {$0.name}))
+        if searchTerm.isEmpty {
+            AuthorPerLetterView(authors: authors.unique(by: {$0.name}))
+                .listStyle(.inset(alternatesRowBackgrounds: true))
+                .navigationTitle(navigationManager.selectedCategory?.title() ?? "")
+                .navigationSubtitle(navigationManager.selectedAuthor?.name ?? "")
+        } else {
+            let filteredAuthors = authors.filter({$0.name.localizedCaseInsensitiveContains(searchTerm)})
+            List(filteredAuthors.unique(by: {$0.name}), selection: $navigationManager.selectedAuthor) { author in
+                Label(author.name, systemImage: "person")
+                    .tag(author)
+            }
             .listStyle(.inset(alternatesRowBackgrounds: true))
             .navigationTitle(navigationManager.selectedCategory?.title() ?? "")
             .navigationSubtitle(navigationManager.selectedAuthor?.name ?? "")
+        }
     }
 }
 
@@ -29,18 +42,14 @@ struct AuthorPerLetterView: View {
     var alphabet: [String] = "abcdefghijklmnopqrstuvwxyz".map({String($0)})
     
     var body: some View {
-        List(selection: $navigationManager.selectedAuthor) {
-            ForEach(alphabet, id: \.self) {char in
-                Section(char.uppercased()) {
-                    ForEach(authors.filter({$0.name.lowercased().starts(with: char)})) { author in
-                        //Group{
-                            Label(author.name, systemImage: "person")
-                                .badge(papers.filter({$0.authors.map({$0.name}).contains(author.name)}).count)
-                        //}
+        List(alphabet, id: \.self, selection: $navigationManager.selectedAuthor) { char in
+            Section(char.uppercased()) {
+                ForEach(authors.filter({$0.name.lowercased().starts(with: char)})) { author in
+                    Label(author.name, systemImage: "person")
+                        //.badge(papers.filter({$0.authors.map({$0.name}).contains(author.name)}).count)
                         .tag(author)
-                    }
                 }
-            }
+            }.listSectionSeparator(.hidden)
         }
     }
 }

@@ -25,7 +25,7 @@ struct ExpandableText: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             Group {
-                Text(self.expanded ? text : shrinkText) + Text(moreLessText)
+                Text("\(self.expanded ? text : shrinkText) \(moreLessText)")
                     .bold()
                     .foregroundColor(.black)
             }

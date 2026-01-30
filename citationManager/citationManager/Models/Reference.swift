@@ -18,6 +18,8 @@ final class Reference {
     var doi: String
     var authors: [String]
     var authorList: String
+    var citation: String = ""
+    var citationWarning: Bool = true
     //@Relationship(inverse: \Paper.bibliography)
     
     init(bibcode: String, title: String, year: String = "", arXivId: String = "", doi: String = "", authors: [String] = []) {

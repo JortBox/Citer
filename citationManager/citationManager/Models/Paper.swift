@@ -7,8 +7,6 @@
 
 import Foundation
 import SwiftData
-//import ArxivKit
-
 
 @Model
 final class Paper {
@@ -28,13 +26,17 @@ final class Paper {
     var arXivId: String
     var year: String
     var referenceIds: [String]
+    var authorList: String = ""
+    var notes: String = ""
+    var citation: String = ""
+    var citationWarning: Bool = true
     
     @Attribute(.unique) var bibcode: String
     @Relationship(deleteRule: .cascade) var authors: [Author]
     @Relationship(deleteRule: .nullify) var bibliography: [Reference]
     @Relationship(deleteRule: .cascade) var keywords: [Keyword]
     @Relationship(deleteRule: .cascade) var objects: [Object]
-    
+    @Relationship(deleteRule: .cascade) var catalogs: [Catalog]
     
     init(bibcode: String,
          title: String,
@@ -51,7 +53,8 @@ final class Paper {
          year: String,
          referenceIds: [String] = [],
          keywords: [Keyword] = [],
-         objects: [Object] = []
+         objects: [Object] = [],
+         catalogs: [Catalog] = []
     ) {
         self.title = title
         self.publicationDate = publicationDate
@@ -69,6 +72,12 @@ final class Paper {
         self.referenceIds = referenceIds
         self.keywords = keywords
         self.objects = objects
+        self.catalogs = catalogs
+        
+        self.authorList = self.authors
+            .sorted(by: {$0.timestamp < $1.timestamp})
+            .map({$0.name})
+            .joined(separator: ", ")
     }
 }
 
@@ -92,20 +101,10 @@ extension DataHandler {
     }
 
     func newItem(paperId: String) async throws -> Paper {
-        //let integers = ["0","1","2","3","4","5","6","7","8","9"]
-        //if integers.contains(String(paperId.last!)) {
-            //print("ARXIV")
-            //let paper = await arXivQuery(arXivID: paperId)
-            //modelContext.insert(paper)
-            //try modelContext.save()
-        //    return nil
-        //} else {
-            let paper = await AdsQuery(paperId: paperId)
-            modelContext.insert(paper)
-            try modelContext.save()
-            return paper
-        //}
-
+        let paper = await AdsQuery(paperId: paperId)
+        modelContext.insert(paper)
+        try modelContext.save()
+        return paper
     }
     
     func deleteItem(_ paper: Paper) throws {

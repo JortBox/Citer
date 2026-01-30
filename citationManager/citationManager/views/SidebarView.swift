@@ -27,11 +27,7 @@ struct SidebarView: View {
             return papers.filter({$0.read}).count
         case .favourites:
             return papers.filter({$0.favourite}).count
-        case .authors:
-            return 0
-        case .keywords:
-            return 0
-        case .objects:
+        case .authors, .keywords, .objects:
             return 0
         case .readingList:
             return papers.filter({$0.inReadingList}).count
@@ -46,25 +42,22 @@ struct SidebarView: View {
         List(selection: $navigationStateManager.selectedCategory) {
             Section("Library") {
                 ForEach(Category.allCases) { category in
-                    Group {
-                        Label(category.title(), systemImage: category.iconName)
-                            .badge(Count(category))
-                    }.tag(category)
+                    Label(category.title(), systemImage: category.iconName)
+                        .badge(Count(category))
+                        .badgeProminence(.decreased)
+                        .tag(category)
                 }
             }
             
             Section("Identifiers") {
-                Group {
-                    Label(Category.authors.title(), systemImage: Category.authors.iconName)
-                }.tag(Category.authors)
+                Label(Category.authors.title(), systemImage: Category.authors.iconName)
+                    .tag(Category.authors)
                 
-                Group {
-                    Label(Category.keywords.title(), systemImage: Category.keywords.iconName)
-                }.tag(Category.keywords)
+                Label(Category.keywords.title(), systemImage: Category.keywords.iconName)
+                    .tag(Category.keywords)
                 
-                Group {
-                    Label(Category.objects.title(), systemImage: Category.objects.iconName)
-                }.tag(Category.objects)
+                Label(Category.objects.title(), systemImage: Category.objects.iconName)
+                    .tag(Category.objects)
             }
             
             Section("Collections") {
@@ -74,6 +67,7 @@ struct SidebarView: View {
                         Image(systemName: "tray.2").foregroundStyle(.primary)
                         TextField("New Collection", text: $collection.title)
                             .badge(collection.papers.count)
+                            .badgeProminence(.decreased)
                     }
                     .tag(Category.list(collection))
                     .contextMenu {
@@ -81,7 +75,6 @@ struct SidebarView: View {
                     }
                 }
             }
-            
             
             Section("Tags") {
                 DisclosureGroup {
@@ -91,6 +84,7 @@ struct SidebarView: View {
                             Image(systemName: "number").foregroundStyle(.primary)
                             TextField("New Tag", text: $tag.title)
                                 .badge(tag.paperId.count)
+                                .badgeProminence(.decreased)
                         }
                         .tag(Category.tags(tag))
                         .contextMenu {
@@ -109,8 +103,30 @@ struct SidebarView: View {
     }
 }
 
-
-
-//#Preview {
-//    SidebarView()
-//}
+struct SidebarInsetView: View {
+    @Environment(\.modelContext) var context
+    @Environment(\.openSettings) private var openSettings
+    
+    var body: some View {
+        HStack {
+            Button(action: {
+                context.insert(Collection(title: "New Collection"))
+            }, label: {
+                Label("New Collection", systemImage: "plus.circle")
+            })
+            .buttonStyle(.plain)
+            .foregroundStyle(.accent)
+            .padding()
+            .frame(maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/, alignment: .leading)
+            
+            Spacer()
+            
+            Button(action: {
+                openSettings()
+            }, label: { Image(systemName: "gear") })
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal)
+        }
+    }
+}

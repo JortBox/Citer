@@ -164,7 +164,7 @@ func filePicker() -> URL? {
     let dialog = NSOpenPanel()
     
     dialog.title = "Choose a file"
-    dialog.showsResizeIndicator = true
+    //dialog.showsResizeIndicator = true
     dialog.showsHiddenFiles = false
     dialog.allowsMultipleSelection = false
     dialog.canChooseDirectories = false

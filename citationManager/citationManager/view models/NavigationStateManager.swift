@@ -11,7 +11,7 @@ import SwiftUI
 class NavigationStateManager: ObservableObject {
     
     @Published var columnVisibility: NavigationSplitViewVisibility = .all
-    @Published var selectedCategory: Category? = nil
+    @Published var selectedCategory: Category? = .all
     @Published var highlightMode: Bool = false
     
     @Published var selectedPaper: Paper? = nil

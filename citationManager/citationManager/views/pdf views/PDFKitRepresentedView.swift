@@ -26,15 +26,15 @@ struct PDFKitRepresentedView: NSViewRepresentable {
         self.url = document.documentURL!
     }
     
-    func makeNSView(context: NSViewRepresentableContext<PDFKitRepresentedView>) -> PDFKitRepresentedView.NSViewType {
-        let pdfView = PDFView()
+    func makeNSView(context: NSViewRepresentableContext<PDFKitRepresentedView>) -> CustomPDFView {
+        let pdfView = CustomPDFView()
         pdfView.document = self.document
         pdfView.scaleFactor = zoomScaleFactor
         pdfView.autoScales = true
         return pdfView
     }
     
-    func updateNSView(_ pdfView: PDFView, context: NSViewRepresentableContext<PDFKitRepresentedView>) {
+    func updateNSView(_ pdfView: CustomPDFView, context: NSViewRepresentableContext<PDFKitRepresentedView>) {
         if pdfView.document?.documentURL != self.url {
             pdfView.document = self.document
         }
@@ -67,23 +67,33 @@ struct PDFKitRepresentedView: NSViewRepresentable {
                 }
             })
         }
-        
         if zoomScaleFactor != 1.0 {
             pdfView.scaleFactor = zoomScaleFactor
-        }
-    }
-    
-    func RemoveSearchResults(_ document: PDFDocument) {
-        for y in stride(from: 0, to: document.pageCount, by: 1) {
-            let page: PDFPage = document.page(at: y)!
-            
-            for annotation in page.annotations {
-                if annotation.contents == "searchResult" {
-                    page.removeAnnotation(annotation)
-                }
-            }
         }
     }
 }
                                
 
+class CustomPDFView: PDFView {
+    override func mouseDown(with event: NSEvent) {
+        let location = self.convert(event.locationInWindow, from: nil)
+        
+        // Get page at that point
+        if let page = self.page(for: location, nearest: true) {
+            let pagePoint = self.convert(location, to: page)
+            
+            // Check if an annotation is at that point
+            if let annotation = page.annotation(at: pagePoint),
+               annotation.type == "Link" {
+                NotificationCenter.default.post(name: .didClickPDFLink,
+                                                object: annotation)
+                return
+            }
+        }
+        super.mouseDown(with: event) // fall back to normal handling
+    }
+}
+
+extension Notification.Name {
+    static let didClickPDFLink = Notification.Name("didClickPDFLink")
+}

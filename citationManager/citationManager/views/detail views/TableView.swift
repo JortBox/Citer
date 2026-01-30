@@ -9,9 +9,10 @@ import SwiftUI
 import SwiftData
 
 struct TableView: View {
-    @Binding var table: VizierTableRow
+    @Binding var table: VizierTable
     @Binding var tableLoaded: Bool
-    @State var order: SortOrder
+    
+    @State var order: [KeyPathComparator<VizierTableRow>] = [.init(\.cols[0], order: .forward)] // Sorting criteria
     
     var body: some View {
         if tableLoaded {
@@ -24,12 +25,12 @@ struct TableView: View {
                     }
                 }
                 .tableStyle(.bordered)
-                .onChange(of: order) { newOrder in
-                    VizierTableRow.sort(using: newOrder)
-                }
-                .task {
-                    VizierTableRow.sort(using: order)
-                }
+                //.onChange(of: order) { newOrder in
+                //    //VizierTable.sort(using: newOrder)
+                //}
+                //.task {
+                //    //VizierTable.sort(using: order)
+                //}
             }
         } else {
             Text("Catalogue Not Loaded")

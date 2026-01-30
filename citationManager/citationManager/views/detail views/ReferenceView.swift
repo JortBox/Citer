@@ -13,10 +13,8 @@ struct ReferenceView: View {
     @Environment(\.openURL) var openURL
     @Environment(\.openWindow) var openWindow
     
-    @Query var papers: [Paper]
-    
     let reference: Reference
-    
+    let asociatedPaper: Paper?
     @State private var inLibrary: Bool =  false
     
     var body: some View {
@@ -57,40 +55,48 @@ struct ReferenceView: View {
                             Button(action: {
                                 openURL(link)
                             }, label: {
-                                Label("ADS", systemImage: "globe")
+                                Label("ADS", systemImage: "arrow.up.right.square")
                                     .font(.footnote)
                                     .foregroundStyle(.blue)
                             })
                             .buttonStyle(.accessoryBar)
                             
                         } else {
-                            Label("SAO/NASA ADS", systemImage: "globe")
+                            Label("SAO/NASA ADS", systemImage: "exclamationmark.triangle")
                                 .font(.footnote)
                                 .foregroundStyle(.gray)
                         }
+                        
+                        Button(
+                            action: {
+                                let pasteboard = NSPasteboard.general
+                                pasteboard.clearContents()
+                                pasteboard.setString("\(reference.citation)", forType: .string)
+                            }, label: {
+                                Label("BibTex Citation", systemImage: "document.on.document")
+                                    .font(.footnote)
+                                    .foregroundStyle(.foreground)
+                            }
+                        ).buttonStyle(.accessoryBar)
                        
-                        let adsIds = papers.map({$0.bibcode})
-                        if adsIds.contains(reference.bibcode) {
+                        if asociatedPaper != nil {
                             Button(action: {
-                                for paper in papers {
-                                    if paper.bibcode == reference.bibcode {
-                                        openWindow(id: "Reference", value: paper.id)
-                                    }
-                                }
-
+                                openWindow(id: "Reference", value: asociatedPaper!.id)
                             }, label: {
                                 Label("Open In New Tab", systemImage: "plus.square.on.square")
                                     .font(.footnote)
                             })
-                            .buttonStyle(CustomAccentButton())
+                            .buttonStyle(.glassProminent)
+                            //.buttonStyle(CustomAccentButton())
                             
                         } else {
                             Button(action: {
                                 AddPaper(paperId: reference.bibcode)
                             }, label: {
-                                Label("Add To Library", systemImage: "tray.and.arrow.down").font(.footnote)
+                                Label("Add to Library", systemImage: "tray.and.arrow.down").font(.footnote)
                             })
-                            .buttonStyle(CustomButtonDark())
+                            .buttonStyle(.glass)
+                            //.buttonStyle(CustomButtonDark())
                         }
 
                     } else {
@@ -103,8 +109,7 @@ struct ReferenceView: View {
                 Spacer()
             }
         } icon: {
-            let adsIds = papers.map({$0.bibcode})
-            if adsIds.contains(reference.bibcode) {
+            if asociatedPaper != nil {
                 Image(systemName: "quote.bubble.fill.rtl").foregroundColor(.accentColor)
             } else {
                 Image(systemName: "quote.bubble.rtl").foregroundColor(.primary)
@@ -139,7 +144,7 @@ struct ReferenceView: View {
     }
 }
 
-private struct CustomButtonDark: ButtonStyle {
+struct CustomButtonDark: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .padding(.vertical, 4)
@@ -150,7 +155,7 @@ private struct CustomButtonDark: ButtonStyle {
     }
 }
 
-private struct CustomAccentButton: ButtonStyle {
+struct CustomAccentButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .padding(.vertical, 4)

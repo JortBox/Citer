@@ -14,6 +14,10 @@ struct TileView: View {
     
     @State private var itemSize: CGFloat = 200
     @State private var selection: String = "None"
+    
+    @State private var filterFavourites: filterState = .base
+    @State private var filterRead: filterState = .base
+    @State private var filterReadingList: filterState = .base
                                     
     let papers: [Paper]
     
@@ -23,7 +27,6 @@ struct TileView: View {
                 ForEach(papers) { paper in
                     Button(action: {
                         selection = paper.bibcode
-                        //navigationManager.selectedPaper = paper
                         openWindow(id: "Reference", value: paper.id)
                     }, label: {
                         GalleryItem(paper: paper, size: itemSize, selection: $selection)
@@ -38,6 +41,13 @@ struct TileView: View {
             ItemSizeSlider(size: $itemSize)
                 .padding(.vertical, 5)
         }
+        //.safeAreaInset(edge: .top, alignment: .leading, spacing: 0) {
+        //    PaperFilterView(papers: papers,
+        //                    filterFavourites: $filterFavourites,
+        //                    filterRead: $filterRead,
+        //                    filterReadingList: $filterReadingList
+        //    )
+        //}
         .onTapGesture {
             selection = "None"
             navigationManager.selectedPaper = nil
@@ -52,10 +62,13 @@ struct TileView: View {
 
     private struct GalleryItem: View {
         @EnvironmentObject var navigationManager: NavigationStateManager
+        @Query(sort: \Tag.title, animation: .default) var tags: [Tag]
         
         var paper: Paper
         var size: CGFloat
         @Binding var selection: String
+        
+        @State private var showDialog: Bool = false
         
         var body: some View {
             var isSelected: Bool { selection == paper.bibcode }
@@ -97,6 +110,11 @@ struct TileView: View {
                             .font(.subheadline)
                             .foregroundStyle(isSelected ? .white : .secondary)
                     }
+                    
+                    HStack(alignment: .top) {
+                        Text(tags.filter({$0.paperId.contains(paper.bibcode)}).map({"#\($0.title)"}).joined(separator: ", "))
+                            .foregroundStyle(.blue)
+                    }
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 8)
@@ -108,7 +126,7 @@ struct TileView: View {
             }
             .frame(width: size)
             .contextMenu {
-                PaperContextMenu(paper: paper)
+                PaperContextMenu(paper: paper, showDialog: $showDialog)
             }
         }
 
@@ -134,7 +152,7 @@ struct TileView: View {
                             Image(systemName: "star.fill")
                                 .background(.yellow)
                                 .cornerRadius(3)
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(.white)
                                 .padding()
                                 .font(.system(size: 20))
                         }
@@ -146,9 +164,9 @@ struct TileView: View {
                 Image(systemName: "doc.questionmark.fill")
                     .symbolVariant(.fill)
                     .font(.system(size: 40))
-                    .foregroundColor(Color.accent)
+                    .foregroundColor(.secondary)
                     .clipShape(RoundedRectangle(cornerRadius: 8).size(width: size, height: size))
-                    .frame(width: size, height: size, alignment: .top)
+                    .frame(width: size, height: size, alignment: .center)
             }
         }
     }
@@ -169,16 +187,6 @@ struct TileView: View {
     }
 }
 
-struct ShapeStyleExample: ShapeStyle {
-    func resolve(in environment: EnvironmentValues) -> some ShapeStyle {
-        if environment.colorScheme == .light {
-            return Color.purple
-        } else {
-            return Color.yellow
-        }
-    }
-}
-
 struct TileButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -187,5 +195,96 @@ struct TileButton: ButtonStyle {
             .background(configuration.isPressed ? .accent : .clear)
             .foregroundStyle(.secondary)
             .clipShape(RoundedRectangle(cornerRadius: 5))
+    }
+}
+
+
+struct PaperFilterView: View {
+    let papers: [Paper]
+    @Binding var filterFavourites: filterState
+    @Binding var filterRead: filterState
+    @Binding var filterReadingList: filterState
+    
+    var body: some View {
+        HStack {
+            Button(action: {
+                filterFavourites = filterFavourites.next()
+            }, label: {
+                Text("Favorites").strikethrough(!(filterFavourites.value() ?? true))
+                    .foregroundStyle(filterFavourites.foregroundColor())
+            })
+            .buttonStyle(FilterButton(filter: filterFavourites))
+            .padding(.vertical, 10)
+            .padding(.leading, 10)
+            
+            Button(action: {
+                filterRead = filterRead.next()
+            }, label: {
+                Text("Read").strikethrough(!(filterRead.value() ?? true))
+                    .foregroundStyle(filterRead.foregroundColor())
+            })
+            .buttonStyle(FilterButton(filter: filterRead))
+            .padding(.vertical, 10)
+            
+            Button(action: {
+                filterReadingList = filterReadingList.next()
+            }, label: {
+                Text("Reading List").strikethrough(!(filterReadingList.value() ?? true))
+                    .foregroundStyle(filterReadingList.foregroundColor())
+            })
+            .buttonStyle(FilterButton(filter: filterReadingList))
+            .padding(.vertical, 10)
+            
+            
+        }
+    }
+}
+
+struct FilterButton: ButtonStyle {
+    let filter: filterState
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(8)
+            .background(filter.backgroundColor())
+            .foregroundStyle(filter.foregroundColor())
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+enum filterState {
+    case base
+    case filter
+    case antifilter
+    
+    func next() -> filterState {
+        switch self {
+        case .base: return .filter
+        case .filter: return .antifilter
+        case .antifilter: return .base
+        }
+    }
+    
+    func value() -> Bool? {
+        switch self {
+        case .base: return nil
+        case .filter: return true
+        case .antifilter: return false
+        }
+    }
+    
+    func backgroundColor() -> Color {
+        switch self {
+        case .base: return Color(.lightGray).opacity(0.5)
+        case .filter: return .accent
+        case .antifilter: return Color(.white)
+        }
+    }
+    
+    func foregroundColor() -> Color {
+        switch self {
+        case .base: return Color.primary
+        case .filter: return Color.white
+        case .antifilter: return .accent
+        }
     }
 }

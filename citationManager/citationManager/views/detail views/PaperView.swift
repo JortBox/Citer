@@ -22,6 +22,7 @@ struct PaperView: View {
     var paperViewMode: PaperViewMode
     
     @State private var showFullAbstract: Bool = false
+    @State private var showDialog: Bool = false
   
     var body: some View {
         Label {
@@ -75,21 +76,23 @@ struct PaperView: View {
                 }
                 
                 
-                HStack{
+                HStack {
                     Text(paper.year)//.formatted(date: .numeric, time: .omitted) )
                         .lineLimit(1)
                         .font(.footnote)
                         .foregroundColor(.secondary)
                     
+                    
                     Button(action: {
-                            paper.read.toggle()
+                        paper.read.toggle()
                         
                     }, label: {
                         Label(paper.read ? "Read" : "Mark As Read",
-                              systemImage: paper.read ? "checkmark.circle.fill" : "checkmark.circle")
+                              systemImage: paper.read ? "checkmark.circle.fill" : "circle")
                         .font(.footnote)
                     })
                     .buttonStyle(CustomButton())
+                    
                     
                     if paper.new && navigationManager.selectedPaper != paper {
                         Text("New").bold().foregroundStyle(.accent)
@@ -128,12 +131,21 @@ struct PaperView: View {
                                 .foregroundStyle(.gray)
                         }
                     }
-                     
+                    
+                    if UserDefaults.standard.bool(forKey: "showTags") {
+                        Spacer()
+                        Text(tags.filter({$0.paperId.contains(paper.bibcode)}).map({"#\($0.title)"}).joined(separator: ", "))
+                            .foregroundStyle(.blue)
+                    }
                 }
                 switch paperViewMode {
                 case .small:
                     Spacer()
                 case .large:
+                    HStack(alignment: .top) {
+                        Text(tags.filter({$0.paperId.contains(paper.bibcode)}).map({"#\($0.title)"}).joined(separator: ", "))
+                            .foregroundStyle(.blue)
+                    }
                     Spacer(minLength: 10)
                 }
                 Spacer()
@@ -147,7 +159,7 @@ struct PaperView: View {
             switch category {
             case .all, .unread, .read, .favourites, .readingList, .authors, .keywords, .objects:
                 Button("Delete", systemImage: "trash", role: .destructive) {
-                    deletePaper(paper)
+                    showDialog = true
                 }
             case .list(let collection):
                 Button("Remove from Collection", systemImage: "folder.badge.minus") {
@@ -160,6 +172,12 @@ struct PaperView: View {
             }
             
         }
+        .confirmationDialog("Are you sure you want to delete '\(paper.title)'?", isPresented: $showDialog) {
+            Button("Delete", role: .destructive) { deletePaper(paper) }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This action cannot be undone.")
+        }
         .swipeActions(edge: .leading) {
             Button(paper.read ? "Unread" : "Read", systemImage: paper.read ? "eye.slash" : "eye") {
                 paper.read.toggle()
@@ -171,7 +189,13 @@ struct PaperView: View {
             
         }
         .contextMenu {
-            PaperContextMenu(paper: paper)
+            PaperContextMenu(paper: paper, showDialog: $showDialog, confirmation: true)
+        }
+        .confirmationDialog("Are you sure you want to delete '\(paper.title)'?", isPresented: $showDialog) {
+            Button("Delete", role: .destructive) { deletePaper(paper) }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This action cannot be undone.")
         }
     }
     
@@ -192,6 +216,7 @@ struct PaperView: View {
         
         if let tag = fromTag {
             tag.papers.removeAll(where: {$0.bibcode == paper.bibcode})
+            tag.paperId.removeAll(where: {$0 == paper.bibcode})
         }
 
         if fromCollection == nil && fromTag == nil{
@@ -217,10 +242,11 @@ struct CustomButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .padding(.vertical, 3)
-            .padding(.horizontal, 5)
+            .padding(.horizontal, 8)
             .background(configuration.isPressed ? .quaternary : .quinary)
             .foregroundStyle(.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: 5))
+            //.clipShape(RoundedRectangle(cornerRadius: 5))
+            .clipShape(Capsule())
     }
 }
 

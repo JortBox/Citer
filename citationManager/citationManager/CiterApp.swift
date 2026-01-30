@@ -41,7 +41,7 @@ struct CiterApp: App {
         
         WindowGroup("Info", id: "Info", for: Paper.ID.self) { $paperId in
             if (paperId != nil) {
-                InfoView(paperId: paperId!)
+                List { InfoView(paperId: paperId!) }
                     .frame(width: 400, height: 600)
             } else { ErrorPaperView() }
         }
@@ -51,14 +51,24 @@ struct CiterApp: App {
         WindowGroup("Reference", id: "Reference", for: Paper.ID.self) { $paperId in
             if (paperId != nil) {
                 ExtraDetailView(paperId: paperId!)
-                    .frame(minWidth: 300, idealWidth: 400 ,minHeight: 400, idealHeight: 600)
+                    .frame(minWidth: 400, idealWidth: 400 ,minHeight: 800, idealHeight: 800)
             } else { ErrorPaperView() }
         }
         .modelContainer(sharedModelContainer)
         
+        WindowGroup("Table", id: "Table", for: Catalog.ID.self) { $catalogId in
+            if (catalogId != nil) {
+                TableWindowView(catalogId: catalogId!)
+                    .frame(minWidth: 400, idealWidth: 400 ,minHeight: 800, idealHeight: 800)
+            } else { ErrorPaperView() }
+        }
+        .modelContainer(sharedModelContainer)
+        
+
+        
         Settings {
             SettingsView()
-                .frame(width: 400, height: 150)
+                .frame(width: 400, height: 250)
         }
     }
 }

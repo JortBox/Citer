@@ -30,7 +30,6 @@ struct ToolbarView: View {
                 Label("Add Paper", systemImage: "doc.badge.plus")
                     .foregroundStyle(popoverIsShown ? .accent : .secondary)
             })
-            .buttonStyle(.accessoryBar)
             .popover(isPresented: $popoverIsShown, arrowEdge: .bottom) {
                 let adsToken: String = UserDefaults.standard.string(forKey: "adsToken") ?? ""
                 
@@ -80,22 +79,14 @@ struct ToolbarView: View {
             }
         }
         
-        Button( action: {
-            if let paper = navigationManager.selectedPaper {
-                paper.favourite.toggle()
-            }
-        }, label: {
-            if let paper = navigationManager.selectedPaper {
-                Label(paper.favourite ? "Remove From Favourites" : "Add To Favourites", systemImage: paper.favourite ? "star.fill" : "star")
-            } else {
-                Label("Add To Favourites", systemImage: "star")
-            }
-        })
-        .disabled(navigationManager.selectedPaper == nil)
-        
         Spacer()
         
         if navigationManager.selectedPaper == nil && navigationManager.selectedCategory != .authors && navigationManager.selectedCategory != .keywords {
+            Button { } label: {
+                Image(systemName: "star")
+            }
+            .disabled(true)
+            
             Button { } label: {
                 Image(systemName: "highlighter")
             }

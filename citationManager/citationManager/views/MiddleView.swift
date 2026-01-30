@@ -17,92 +17,81 @@ struct MiddleView: View {
     @Query(sort: \Object.name, animation: .default) var objects: [Object]
     
     @Binding var searchTerm: String
+    @Binding var tokens: [FruitToken]
     @State private var sortOption: SortOption = .dateAdded
+    @State private var invertSort: Bool = false
+    
     
     var body: some View {
         if let category = navigationManager.selectedCategory {
+            let filteredPapers: [Paper] = {
+                switch category {
+                case .all, .authors, .keywords, .objects: return papers
+                case .unread: return papers.filter({!$0.read})
+                case .read: return papers.filter({$0.read})
+                case .favourites: return papers.filter({$0.favourite})
+                case .readingList: return papers.filter({$0.inReadingList})
+                case .list(let PaperGroup): return PaperGroup.papers
+                case .tags(let PaperGroup): return papers.filter({PaperGroup.paperId.contains($0.bibcode)})
+               }
+            }()
             
             if searchTerm.isEmpty {
                 switch category {
-                case .all:
-                    PaperListView(papers: papers, 
+                case .all, .unread, .read, .favourites, .readingList, .list, .tags:
+                    PaperListView(papers: filteredPapers,
                                   category: category,
                                   sortOption: $sortOption,
+                                  inverseSort: $invertSort,
                                   paperViewMode: .small)
-                    
-                case .unread:
-                    PaperListView(papers: papers.filter({!$0.read}), 
-                                  category: category,
-                                  sortOption: $sortOption,
-                                  paperViewMode: .small)
-                    
-                case .read:
-                    PaperListView(papers: papers.filter({$0.read}), 
-                                  category: category,
-                                  sortOption: $sortOption,
-                                  paperViewMode: .small)
-                    
-                case .favourites:
-                    PaperListView(papers: papers.filter({$0.favourite}), 
-                                  category: category,
-                                  sortOption: $sortOption,
-                                  paperViewMode: .small)
-                    
-                case .readingList:
-                    PaperListView(papers: papers.filter({$0.inReadingList}), 
-                                  category: category,
-                                  sortOption: $sortOption,
-                                  paperViewMode: .small)
-                    
-                case .list(let PaperGroup):
-                    PaperListView(papers: PaperGroup.papers, 
-                                  category: category,
-                                  sortOption: $sortOption,
-                                  paperViewMode: .small)
-                    
-                case .tags(let PaperGroup):
-                    PaperListView(papers: papers.filter({PaperGroup.paperId.contains($0.bibcode)}),
-                                  category: category,
-                                  sortOption: $sortOption,
-                                  paperViewMode: .small)
-                    
                 case .authors:
-                    AuthorListView(authors: authors)
-                    
+                    AuthorListView(authors: authors, searchTerm: $searchTerm)
                 case .keywords:
                     KeywordListView(keywords: keywords)
-                    
                 case .objects:
-                    ObjectListView(objects: objects)
+                    ObjectListView(objects: objects, searchTerm: $searchTerm)
                 }
-                
-            
             } else {
                 switch category {
-                case .all, .read, .unread, .readingList, .favourites, .list(_), .tags(_):
-                    PaperListView(papers: papers
-                        .filter({$0.title.localizedCaseInsensitiveContains(searchTerm) || $0.authors.map({$0.name}).contains(searchTerm) || $0.keywords.map({$0.full}).contains(searchTerm)}),
+                case .all, .unread, .read, .favourites, .readingList, .list, .tags, .keywords:
+                    let filteredAndSearchedPapers: [Paper] = {
+                        if !tokens.isEmpty {
+                            switch tokens.first! {
+                            case .title:
+                                return filteredPapers.filter({$0.title.localizedCaseInsensitiveContains(searchTerm)})
+                            case .author:
+                                return filteredPapers
+                                    .filter({$0.authors.map({$0.name}).joined(separator: ", ").localizedCaseInsensitiveContains(searchTerm)})
+                            case .tag:
+                                return filteredPapers
+                                    .filter({$0.objects.map({$0.name}).joined(separator: ", ").localizedCaseInsensitiveContains(searchTerm)})
+                            }
+                        } else {
+                            return filteredPapers.filter({$0.title.localizedCaseInsensitiveContains(searchTerm)})
+                        }
+                        
+                    }()
+                    
+                    PaperListView(papers: filteredAndSearchedPapers,
                                   category: category,
                                   sortOption: $sortOption,
+                                  inverseSort: $invertSort,
                                   paperViewMode: .small)
                 case .authors:
-                    AuthorListView(authors: authors.filter({$0.name.localizedCaseInsensitiveContains(searchTerm)}))
-                case .keywords:
-                    KeywordListView(keywords: keywords.filter({$0.full.localizedCaseInsensitiveContains(searchTerm)}))
+                    AuthorListView(authors: authors, searchTerm: $searchTerm)
                 case .objects:
-                    ObjectListView(objects: objects.filter({$0.name.localizedCaseInsensitiveContains(searchTerm)}))
+                    ObjectListView(objects: objects, searchTerm: $searchTerm)
                 }
             }
-            
         } else {
             EmptyView()
-                .background(.ultraThinMaterial)
+                //.background(.ultraThinMaterial)
         }
     }
 }
 
 enum SortOption {
-    case title, dateAdded, year
+    case title, dateAdded, year, author
 }
 
 enum PaperViewMode {

@@ -20,6 +20,8 @@ struct DetailView: View {
     @Query(sort: \Paper.title, animation: .default) var papers: [Paper]
     
     @State private var sortOption: SortOption = .title
+    @State private var invertSort: Bool = false
+    @State private var inspectorTab: tabSelection = .bibliography
     @Binding var inspectorIsShown: Bool
     @SceneStorage("viewMode") private var mode: ViewMode = .gallery
 
@@ -27,13 +29,14 @@ struct DetailView: View {
         if let category = navigationManager.selectedCategory {
             switch category {
             case .all, .read, .unread, .favourites, .readingList, .list(_), .tags(_):
-                    if let paper = navigationManager.selectedPaper {
-                        PdfView(paper: paper, inspectorIsShown: $inspectorIsShown)
-                            .inspector(isPresented: $inspectorIsShown) {
-                                InspectorView(paper: paper)
-                            }
-                            .onAppear { paper.new = false }
-                    } else { EmptyPaperView() }
+                if let paper = navigationManager.selectedPaper {
+                    PdfView(paper: paper, inspectorIsShown: $inspectorIsShown)
+                        .inspector(isPresented: $inspectorIsShown) {
+                            InspectorView(paper: paper, inspectorTab: $inspectorTab)
+                        }
+                        .onAppear { paper.new = false }
+                } else { EmptyPaperView() }
+                
                 
                 case .authors:
                     if let author = navigationManager.selectedAuthor {
@@ -44,7 +47,11 @@ struct DetailView: View {
                         Group {
                             switch mode {
                             case .list:
-                                PaperListView(papers: papersToPass, category: .all, sortOption: $sortOption, paperViewMode: .large)
+                                PaperListView(papers: papersToPass,
+                                              category: .all,
+                                              sortOption: $sortOption,
+                                              inverseSort: $invertSort,
+                                              paperViewMode: .large)
                             case .gallery:
                                 TileView(papers: papersToPass)
                             }
@@ -64,7 +71,11 @@ struct DetailView: View {
                         Group {
                             switch mode {
                             case .list:
-                                PaperListView(papers: papersToPass, category: .all, sortOption: $sortOption, paperViewMode: .large)
+                                PaperListView(papers: papersToPass,
+                                              category: .all,
+                                              sortOption: $sortOption,
+                                              inverseSort: $invertSort,
+                                              paperViewMode: .large)
                             case .gallery:
                                 TileView(papers: papersToPass)
                             }
@@ -84,7 +95,11 @@ struct DetailView: View {
                     Group {
                         switch mode {
                         case .list:
-                            PaperListView(papers: papersToPass, category: .all, sortOption: $sortOption, paperViewMode: .large)
+                            PaperListView(papers: papersToPass,
+                                          category: .all,
+                                          sortOption: $sortOption,
+                                          inverseSort: $invertSort,
+                                          paperViewMode: .large)
                         case .gallery:
                             TileView(papers: papersToPass)
                         }

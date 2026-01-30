@@ -7,62 +7,105 @@
 
 import SwiftUI
 import SwiftData
-import PDFKit
+import OrderedCollections
 
-struct ExtraDetailView: View {
+
+struct TableWindowView: View {
     @StateObject var navigationManager = NavigationStateManager()
-    @State private var inspectorIsShown: Bool = false
-    @State private var zoomScaleFactor: CGFloat = 1.0
-    @State private var showPdfSearch: Bool = false
-    @State private var PdfSearchText: String = ""
-    @State private var selectedSearchResult: Int = 1
-    @State private var inspectorTab: tabSelection = .bibliography
     
-    let paperId: UUID
-    var paper: Paper? = nil
-    @Query var papers: [Paper]
+    let catalogId: UUID
+    var catalog: Catalog? = nil
+    @Query var tables: [Catalog]
+    
+    @State var table = VizierTable()
+    @State var tableLoaded: Bool = false
+    @State var showLoading: Bool = false
     
     var body: some View {
-        var paper: Paper? {
-            for item in papers {
-                if item.id == paperId {
+        var catalog: Catalog? {
+            for item in tables {
+                if item.id == catalogId {
                     return item
                 }
             }
             return nil
         }
         
-        if (paper != nil) {
-            PdfView(paper: paper!, inspectorIsShown: $inspectorIsShown)
-                .environmentObject(navigationManager)
-                .navigationTitle(paper!.title)
-                .navigationSubtitle(ShortAuthorList(paper: paper!))
-                .inspector(isPresented: $inspectorIsShown) {
-                    InspectorView(paper: paper!, inspectorTab: $inspectorTab)
+        if catalog != nil {
+            VStack {
+                Button {
+                    if tableLoaded {
+                        table = VizierTable()
+                        catalog!.table = nil
+                    } else {
+                        //Task.detached {
+                        //    showLoading.toggle()
+                        //    catalog!.table = await VizierQuery(catalog: catalog!)
+                        //    let (rows,cols) = makeIdentifiable(catalog!)
+                        //    await table.columns = cols
+                        //    await table.rows = rows
+                        //    showLoading.toggle()
+                        //}
+                    }
+                    tableLoaded.toggle()
+                    
+                } label: {
+                    Label(tableLoaded ? "Unload Table" : "Fetch Table",
+                          systemImage: tableLoaded ? "square.and.arrow.up" : "square.and.arrow.down")
                 }
-                .onAppear { paper!.new = false }
+                .padding()
+                .buttonStyle(.accessoryBar)
+                
+                if showLoading {
+                    ProgressView()
+                }
+                
+                TableView(table: $table, tableLoaded: $tableLoaded)
+            }
+            .navigationTitle("Table: \(catalog?.name ?? "")")
             
         } else {
-            Image(systemName: "doc.questionmark")
-                .foregroundStyle(.primary)
-                //.imageScale(.large)
-                .font(.system(size: 40))
-                .padding()
-            Text("Error while loading paper")
+            Text("Not supported")
         }
-    }
-    
-    func ShortAuthorList(paper: Paper) -> String {
-        let allAuthors: [String] = paper.authors.sorted(by: {$0.timestamp < $1.timestamp}).map({$0.name})
-        
-        if allAuthors.count == 1 {
-            return allAuthors[0]
-        }
-        else if paper.authors.count == 2 {
-            return allAuthors[0] + " & " + allAuthors[1]
-        }
-        else {
-            return allAuthors[0] + " et al."
-            }
     }
 }
+
+@Observable
+class VizierTable {
+    var columns: [VizierTableColumns] = []
+    var rows: [VizierTableRow] = []
+    //var rows: some RandomAccessCollection<VizierTableRow> { [] }
+}
+
+struct VizierTableColumns: Identifiable {
+    let id = UUID()
+    let colname: String
+    let fields: OrderedDictionary<String, Any>
+}
+
+struct VizierTableRow: Identifiable, Hashable {
+    let id = UUID()
+    let cols: [String]
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
+func makeIdentifiable(_ catalog: Catalog) -> ([VizierTableRow], [VizierTableColumns]) {
+    let decodedTable = DecodeVizierTable(data: catalog.table!, catalog: catalog)
+    var rows: [VizierTableRow] = []
+    var cols: [VizierTableColumns] = []
+    
+    for col in decodedTable.keys {
+        if col == "data" {
+            for row in decodedTable["data"] as! [[String]] {
+                rows.append(VizierTableRow(cols: row))
+            }
+        } else {
+            cols.append(VizierTableColumns(colname: col, fields: decodedTable[col] as! OrderedDictionary<String, Any>))
+        }
+    }
+    return (rows, cols)
+}
+

@@ -9,16 +9,28 @@ import SwiftUI
 import SwiftData
 import PDFKit
 
+enum FruitToken: String, Identifiable, Hashable, CaseIterable {
+    case title
+    case author
+    case tag
+    var id: Self { self }
+}
 
 struct ContentView: View {
+    //@EnvironmentObject private var model: SearchModel
     @Query(sort: \Paper.title, animation: .default) var papers: [Paper]
     @Query(sort: \Author.name, animation: .default) var authors: [Author]
-    @Query(sort: \Keyword.full, animation: .default) var keywords: [Keyword]
+    @Query(sort: \Object.name, animation: .default) var objects: [Object]
     
     @StateObject var navigationManager = NavigationStateManager()
+    @State private var preferredColumn: NavigationSplitViewColumn = .detail
 
+    @State private var inspectorTab: tabSelection = .bibliography
+    
     @State private var inspectorIsShown: Bool = false
     @State private var searchTerm: String = ""
+    @State private var tokens: [FruitToken] = []
+    @State private var text: String = ""
     
     var uniqueAuthors: [String] {
          return Array(Set(authors.map({$0.name})))
@@ -26,59 +38,36 @@ struct ContentView: View {
             .sorted { $0 < $1 }
     }
     
-    var uniqueKeywords: [String] {
-        return Array(Set(keywords.map({$0.full})))
+    var uniqueObjects: [String] {
+        return Array(Set(objects.map({$0.name})))
             .filter({$0.localizedCaseInsensitiveContains(searchTerm)})
             .sorted { $0 < $1 }
     }
-
+    
     var body: some View {
         NavigationSplitView(columnVisibility: $navigationManager.columnVisibility, 
         sidebar: {
-            
             SidebarView()
-            
         }, content: {
-            
-            MiddleView(searchTerm: $searchTerm)
-            
+            MiddleView(searchTerm: $searchTerm, tokens: $tokens)
         }, detail: {
-            
             DetailView(inspectorIsShown: $inspectorIsShown)
-            
         })
         .environmentObject(navigationManager)
-        .searchable(text: $searchTerm, placement: .toolbar,  prompt: "Search by Title or Author")
+        .searchable(text: $searchTerm, tokens: $tokens) { token in
+            switch token {
+            case .title: Text("Title")
+            case .author: Text("Author")
+            case .tag: Text("Object")
+            }
+        }
         .searchSuggestions {
-            if !searchTerm.isEmpty {
-                let filteredTitles = papers.filter({$0.title.localizedCaseInsensitiveContains(searchTerm)})
-                let filteredAuthors = authors.unique(by: {$0.name}).filter({$0.name.localizedCaseInsensitiveContains(searchTerm)})
-                let filteredKeywords = keywords.unique(by: {$0.full}).filter({$0.full.localizedCaseInsensitiveContains(searchTerm)})
-                
-                if !filteredTitles.isEmpty {
-                    Section("Titles") {
-                        ForEach(filteredTitles) { suggestion in
-                            Label(suggestion.title, systemImage: "doc.text").lineLimit(1)
-                                .searchCompletion(suggestion.title)
-                        }
-                    }
-                }
-                
-                if !filteredAuthors.isEmpty {
-                    Section("Authors") {
-                        ForEach(filteredAuthors) { suggestion in
-                            Label(suggestion.name, systemImage: "person").lineLimit(1)
-                                .searchCompletion(suggestion.name)
-                        }
-                    }
-                }
-                
-                if !filteredKeywords.isEmpty {
-                    Section("Keywords") {
-                        ForEach(filteredKeywords) { suggestion in
-                            Label(suggestion.full, systemImage: "tag").lineLimit(1)
-                                .searchCompletion(suggestion.full)
-                        }
+            if tokens.isEmpty {
+                ForEach(FruitToken.allCases, id: \.self) { token in
+                    switch token {
+                    case .title: Label("Title", systemImage: "character").searchCompletion(token)
+                    case .author: Label("Author", systemImage: "person.fill").searchCompletion(token)
+                    case .tag: Label("Object", systemImage: "hurricane").searchCompletion(token)
                     }
                 }
             }

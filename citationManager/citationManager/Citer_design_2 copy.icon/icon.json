@@ -1,0 +1,90 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:1.00000,1.00000,1.00000,1.00000",
+      "display-p3:0.83775,0.83775,0.83775,1.00000"
+    ]
+  },
+  "groups" : [
+    {
+      "blur-material" : 0.5,
+      "layers" : [
+        {
+          "hidden" : false,
+          "image-name" : "design_3.svg",
+          "name" : "design_3",
+          "position" : {
+            "scale" : 3.6,
+            "translation-in-points" : [
+              -82,
+              -88
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 1
+      },
+      "specular-specializations" : [
+        {
+          "value" : false
+        },
+        {
+          "appearance" : "tinted",
+          "value" : true
+        }
+      ],
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.2
+      }
+    },
+    {
+      "blur-material" : null,
+      "hidden" : false,
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "extended-gray:0.25000,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-gray:0.50000,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "handle.svg",
+          "name" : "handle",
+          "position" : {
+            "scale" : 10,
+            "translation-in-points" : [
+              274.1520213180552,
+              306.4424439353089
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.8
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.1
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

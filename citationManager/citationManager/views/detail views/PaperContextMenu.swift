@@ -17,12 +17,25 @@ struct PaperContextMenu: View {
     @Query var collections: [Collection]
     @Query var tags: [Tag]
     
+    @Binding var showDialog: Bool
+    var confirmation: Bool = false
+    
     var body: some View {
-        Button("Open in new Window") { openWindow(id: "Reference", value: paper.id) }
+        Button (action: { openWindow(id: "Reference", value: paper.id) },
+                label: {Label("Open In New Window", systemImage: "plus.rectangle.on.rectangle")}
+        )
         Divider()
-        Button(paper.favourite ? "Remove from Favourites" : "Add to Favourites") { paper.favourite.toggle() }
-        Button(paper.read ? "Mark as Unread": "Mark as Read") { paper.read.toggle() }
-        Button(paper.inReadingList ? "Remove from Reading List": "Add to Reading List") { paper.inReadingList.toggle() }
+        Button (action: {paper.favourite.toggle()},
+                label: {Label(paper.favourite ? "Remove from Favourites" : "Add to Favourites",
+                              systemImage: paper.favourite ? "star.fill" : "star")}
+        )
+        Button (action: {paper.read.toggle()},
+                label: {Label(paper.read ? "Mark as Unread": "Mark as Read", systemImage: "checkmark.seal.text.page")}
+        )
+        Button (action: {paper.inReadingList.toggle()},
+                label: {Label(paper.inReadingList ? "Remove from Reading List": "Add to Reading List",
+                              systemImage: paper.inReadingList ? "eyeglasses.slash" :"eyeglasses")}
+        )
         Menu("Add to Collection") {
             ForEach(collections) { collection in
                 Button(action: {
@@ -62,19 +75,39 @@ struct PaperContextMenu: View {
             }
         }
         Divider()
-        Button("Copy Bibcode") { NSPasteboard.general.setString("\(paper.bibcode)" , forType: .string) }
+        Button (action: {
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString("\(paper.bibcode)", forType: .string)
+        },label: {Label("Copy Bibcode", systemImage: "document.on.document")}
+        )
+        Button (action: {
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString("\(paper.citation)", forType: .string)
+        },label: {Label("Copy BibTex Citation", systemImage: "curlybraces")}
+        )
         Divider()
-        Button("Info") { openWindow(id: "Info", value: paper.id) }
+        Button (action: {openWindow(id: "Info", value: paper.id)},
+                label: {Label("Info", systemImage: "info.circle")}
+        )
+        
         if let link = paper.webLink {
-            Link("View on ADS", destination: link)
+            Link(destination: link, label: {Label("View on ADS", systemImage: "arrow.up.right.square")})
                 .foregroundStyle(.blue)
                 .frame(alignment: .leading)
         }
         Divider()
-        Button("Delete Paper") {
-            deletePaper(paper)
-        }
+        Button (action: {
+            if confirmation {
+                showDialog = true
+            } else {
+                deletePaper(paper)
+            }
+        }, label: {Label("Delete Paper", systemImage: "trash")}
+        )
     }
+    
     
     func deletePaper(_ paper: Paper, fromCollection: Collection? = nil, fromTag: Tag? = nil) {
         
