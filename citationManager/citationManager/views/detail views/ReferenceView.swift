@@ -59,7 +59,7 @@ struct ReferenceView: View {
                                     .font(.footnote)
                                     .foregroundStyle(.blue)
                             })
-                            .buttonStyle(.accessoryBar)
+                            .buttonStyle(.automatic)
                             
                         } else {
                             Label("SAO/NASA ADS", systemImage: "exclamationmark.triangle")
@@ -77,7 +77,7 @@ struct ReferenceView: View {
                                     .font(.footnote)
                                     .foregroundStyle(.foreground)
                             }
-                        ).buttonStyle(.accessoryBar)
+                        ).buttonStyle(.automatic)
                        
                         if asociatedPaper != nil {
                             Button(action: {
@@ -95,7 +95,7 @@ struct ReferenceView: View {
                             }, label: {
                                 Label("Add to Library", systemImage: "tray.and.arrow.down").font(.footnote)
                             })
-                            .buttonStyle(.glass)
+                            .buttonStyle(.automatic)
                             //.buttonStyle(CustomButtonDark())
                         }
 

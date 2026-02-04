@@ -16,9 +16,12 @@ struct InfoView: View {
     @Query var tags: [Tag]
     @State private var popoverIsPresented: Bool = false
     @State private var tagName: String = ""
+    @State private var showAllObjects: Bool = false
     
     var body: some View {
         let paper: Paper = papers.first(where: {$0.id == paperId}) ?? papers.first!
+        let numObjects: Int = paper.objects.count
+        
         VStack(alignment: .leading) {
             Label {
                 HStack(alignment: .top) {
@@ -225,13 +228,23 @@ struct InfoView: View {
                 HStack(alignment: .top) {
                     Text("Objects:")
                     if !paper.objects.isEmpty {
+                        var papersToShow: [Object] {
+                            if showAllObjects || numObjects <= 5 {
+                                return paper.objects.sorted(by: {$0.name < $1.name})
+                            } else {
+                                return Array(paper.objects.sorted(by: {$0.name < $1.name})[0..<5])
+                            }
+                        }
                         VStack(alignment: .leading) {
-                            ForEach(paper.objects.sorted(by: {$0.name < $1.name})) { object in
+                            ForEach(papersToShow) { object in
                                 if let NEDLink = URL(string: "https://ned.ipac.caltech.edu/byname?objname=\(object.name.replacingOccurrences(of: "_", with: "+"))") {
                                     Link(object.name, destination: NEDLink)
                                         .foregroundStyle(.blue)
                                         .frame(alignment: .leading)
                                 }
+                            }
+                            if numObjects > 5 {
+                                Button(action: { showAllObjects.toggle() }, label: {Text(showAllObjects ? "Less..." : "More...").foregroundStyle(.blue)})
                             }
                         }
                     } else { Text("N/A").foregroundStyle(.secondary) }
